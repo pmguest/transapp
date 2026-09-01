@@ -1,0 +1,32 @@
+---
+const links = [
+	{ href: '#story', label: 'Our story' },
+	{ href: '#how', label: 'How it works' },
+	{ href: '#pricing', label: 'Pricing' },
+];
+---
+
+<header class="sticky top-0 z-50 border-b border-line/70 bg-paper/90 backdrop-blur">
+	<nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+		<a href="#top" class="font-serif text-xl font-semibold tracking-tight text-ink">
+			transapp
+		</a>
+		<ul class="hidden items-center gap-8 text-sm font-medium text-ink-soft md:flex">
+			{
+				links.map((link) => (
+					<li>
+						<a href={link.href} class="transition hover:text-ink">
+							{link.label}
+						</a>
+					</li>
+				))
+			}
+		</ul>
+		<a
+			href="#waitlist"
+			class="rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper transition hover:bg-seal"
+		>
+			Join waitlist
+		</a>
+	</nav>
+</header>

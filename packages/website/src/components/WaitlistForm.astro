@@ -1,0 +1,42 @@
+---
+// TODO(buttondown): Replace the `action` below with the real embed URL once
+// the snippet is provided — it follows the pattern:
+//   https://buttondown.com/api/emails/embed-subscribe/<your-username>
+// and the popup `onsubmit` below should open https://buttondown.com/<your-username>.
+// Field names (`email`, hidden `embed`) already match Buttondown's expected
+// embeddable form, so once the URLs are swapped in this component works as-is.
+
+interface Props {
+	align?: 'left' | 'center';
+}
+
+const { align = 'left' } = Astro.props;
+---
+
+<form
+	action="https://buttondown.com/api/emails/embed-subscribe/REPLACE_WITH_USERNAME"
+	method="post"
+	target="popupwindow"
+	onsubmit="window.open('https://buttondown.com/REPLACE_WITH_USERNAME', 'popupwindow')"
+	class:list={[
+		'embeddable-buttondown-form flex w-full max-w-md flex-col gap-3 sm:flex-row',
+		align === 'center' ? 'mx-auto' : '',
+	]}
+>
+	<label for="bd-email" class="sr-only">Enter your email</label>
+	<input
+		type="email"
+		name="email"
+		id="bd-email"
+		required
+		placeholder="you@company.com"
+		class="min-w-0 flex-1 rounded-md border border-ink/15 bg-white px-4 py-3 text-ink placeholder:text-ink-soft/50 shadow-sm focus:border-seal focus:outline-none focus:ring-2 focus:ring-seal/30"
+	/>
+	<input type="hidden" value="1" name="embed" />
+	<button
+		type="submit"
+		class="shrink-0 rounded-md bg-ink px-6 py-3 font-medium text-paper shadow-sm transition hover:bg-seal focus:outline-none focus:ring-2 focus:ring-seal/40"
+	>
+		Join the waitlist
+	</button>
+</form>
