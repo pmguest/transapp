@@ -236,3 +236,18 @@
   `/ember`, `/cipher`, `/anchor`) and pick a direction; still-outstanding
   items unchanged: (1) real Buttondown embed snippet, (2) user review of
   improvised testimonials/pricing
+
+### 2026-09-03 — User preference noted: Signal is the front-runner
+
+- User reviewed the live variants and said "signal seems the clearest";
+  asked what to do next, user chose "just noting a preference for now — no
+  action needed yet, keep all 5 variations live"
+- No files changed; all 5 variations (Ledger, Signal, Ember, Cipher,
+  Anchor) remain live with no direction finalized
+- Also established a new standing instruction (not project-specific,
+  applies going forward): after every meaningful change, auto git
+  add/commit/push to `origin` without asking first — user wants everything
+  saved continuously and will handle any deletions themselves
+- STOPPED — same outstanding items as before: (1) pick a final direction
+  (Signal currently leading), (2) real Buttondown embed snippet, (3) user
+  review of improvised testimonials/pricing
