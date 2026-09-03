@@ -1,0 +1,37 @@
+---
+// Single source of truth for the list of homepage design variations.
+// Add a new variation here and it appears in every page's switcher.
+const variations = [
+	{ slug: '/', label: 'Ledger' },
+	{ slug: '/signal', label: 'Signal' },
+	{ slug: '/ember', label: 'Ember' },
+	{ slug: '/cipher', label: 'Cipher' },
+	{ slug: '/anchor', label: 'Anchor' },
+];
+
+const currentPath = Astro.url.pathname;
+const isActive = (slug: string) => currentPath === slug || (slug !== '/' && currentPath === `${slug}/`);
+---
+
+<div class="flex flex-col items-center gap-2">
+	<p class="text-xs font-medium uppercase tracking-wide text-gray-400">Design preview</p>
+	<nav
+		aria-label="Homepage design variations"
+		class="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1 shadow-md"
+	>
+		{
+			variations.map((v) => (
+				<a
+					href={v.slug}
+					aria-current={isActive(v.slug) ? 'page' : undefined}
+					class:list={[
+						'rounded-full px-3 py-1.5 text-xs font-medium transition',
+						isActive(v.slug) ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900',
+					]}
+				>
+					{v.label}
+				</a>
+			))
+		}
+	</nav>
+</div>

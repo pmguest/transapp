@@ -11,6 +11,8 @@ interface Props {
 }
 
 const { align = 'left' } = Astro.props;
+// Unique per render so multiple forms on one page don't collide on id/for.
+const emailId = `bd-email-${crypto.randomUUID().slice(0, 8)}`;
 ---
 
 <form
@@ -23,11 +25,11 @@ const { align = 'left' } = Astro.props;
 		align === 'center' ? 'mx-auto' : '',
 	]}
 >
-	<label for="bd-email" class="sr-only">Enter your email</label>
+	<label for={emailId} class="sr-only">Enter your email</label>
 	<input
 		type="email"
 		name="email"
-		id="bd-email"
+		id={emailId}
 		required
 		placeholder="you@company.com"
 		class="min-w-0 flex-1 rounded-md border border-ink/15 bg-white px-4 py-3 text-ink placeholder:text-ink-soft/50 shadow-sm focus:border-seal focus:outline-none focus:ring-2 focus:ring-seal/30"

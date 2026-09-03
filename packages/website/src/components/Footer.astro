@@ -1,3 +1,7 @@
+---
+import VariationSwitcher from './VariationSwitcher.astro';
+---
+
 <footer class="border-t border-line/70 bg-paper-dim">
 	<div class="mx-auto max-w-6xl px-6 py-12">
 		<div class="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
@@ -13,6 +17,9 @@
 				<a href="#how" class="hover:text-ink">How it works</a>
 				<a href="#pricing" class="hover:text-ink">Pricing</a>
 			</div>
+		</div>
+		<div class="mt-10 flex justify-center border-t border-line/70 pt-8">
+			<VariationSwitcher />
 		</div>
 		<p class="mt-8 text-xs text-ink-soft/70">
 			© {new Date().getFullYear()} transapp. All rights reserved.

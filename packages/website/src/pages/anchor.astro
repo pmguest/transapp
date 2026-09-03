@@ -1,0 +1,367 @@
+---
+import Layout from '../layouts/Layout.astro';
+import WaitlistForm from '../components/WaitlistForm.astro';
+import VariationSwitcher from '../components/VariationSwitcher.astro';
+
+const navLinks = [
+	{ href: '#mechanism', label: 'The Process' },
+	{ href: '#pricing', label: 'Schedule of Fees' },
+];
+
+const manifestFacts = [
+	{ label: 'Models per document', value: '3' },
+	{ label: 'Consensus required', value: 'Unanimous' },
+	{ label: 'Human review', value: 'On flag' },
+	{ label: 'Terms locked', value: 'Always' },
+];
+
+const problems = [
+	{
+		num: 'I',
+		title: 'A contract clause',
+		body: 'Two counterparties sign the same agreement rendered in two languages. If the model drifted on a single clause, they never actually agreed to the same terms.',
+	},
+	{
+		num: 'II',
+		title: 'A dosage warning',
+		body: 'An interaction caveat that reads correctly in the source can invert in translation, silently, with nothing in the output to mark that it happened.',
+	},
+	{
+		num: 'III',
+		title: 'A safety instruction',
+		body: 'On a factory floor, an instruction that reverses its own meaning in translation does not get a second reading before something goes wrong.',
+	},
+];
+
+const mechanism = [
+	{
+		num: '01',
+		title: 'Independent consensus',
+		body: 'Three separate AI models translate the same document without seeing one another’s work, then cross-examine each draft and converge on a single reading — not one model’s unverified guess.',
+	},
+	{
+		num: '02',
+		title: 'Controlled terminology',
+		body: 'You mandate the terms that must appear and forbid the ones that must not. Those instructions hold on every document, in every language pair, without exception.',
+	},
+	{
+		num: '03',
+		title: 'Standing translation memory',
+		body: 'Once a phrase is approved, it is settled. The same clause, warning, or instruction reads identically across your entire document history.',
+	},
+	{
+		num: '04',
+		title: 'Human gateway review',
+		body: 'Contractual, regulated, or otherwise high-stakes content is held for a qualified reviewer before release. Nothing of consequence clears the gate unseen.',
+	},
+];
+
+const testimonials = [
+	{
+		quote:
+			'The consensus pass surfaced a clause-level mismatch in our freight agreement before it ever reached legal. That is the check we didn’t know we were missing.',
+		name: 'Operations Lead',
+		role: 'Logistics carrier',
+	},
+	{
+		quote:
+			'Our mandated terminology finally holds from submission to submission. For a regulated filing, that consistency is the whole ballgame.',
+		name: 'Regulatory Affairs Manager',
+		role: 'Medical device manufacturer',
+	},
+	{
+		quote:
+			'I have tried AI translation tools before and quietly stopped trusting them. This is the first one where a person is still accountable for the output.',
+		name: 'Founder',
+		role: 'Boutique translation agency',
+	},
+];
+
+const pricing = [
+	{
+		name: 'Starter',
+		price: '$39',
+		period: '/mo',
+		description: 'For teams filing the occasional document that has to hold up.',
+		features: ['Up to 20,000 words / month', 'Consensus on every draft', 'One controlled glossary', 'Email support'],
+		featured: false,
+	},
+	{
+		name: 'Business',
+		price: '$149',
+		period: '/mo',
+		description: 'For companies moving regulated, contractual, or brand-bound content at volume.',
+		features: [
+			'Up to 150,000 words / month',
+			'Unlimited glossaries & shared memory',
+			'Human gateway on flagged content',
+			'Priority support',
+		],
+		featured: true,
+	},
+	{
+		name: 'Enterprise',
+		price: 'Let’s talk',
+		period: '',
+		description: 'For organizations that require dedicated reviewers and a documented audit trail.',
+		features: ['Custom volume', 'Dedicated human reviewers', 'Compliance & audit trail', 'SSO'],
+		featured: false,
+	},
+];
+---
+
+<Layout
+	title="transapp — Anchor"
+	description="AI document translation that gets independently verified before it ships. Three-model consensus, controlled terminology, and a human review gateway for anything of consequence."
+	noindex={true}
+>
+	<div class="bg-white font-sans text-[#0f1b33]">
+		<!-- Header -->
+		<header class="border-b-4 border-[#0f1b33] bg-white">
+			<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+				<a href="#top" class="flex items-center gap-2 font-['Source_Serif_4',serif] text-lg font-bold tracking-tight text-[#0f1b33]">
+					<span class="inline-block h-4 w-2.5 border border-[#0f1b33] bg-[#dc2626]"></span>
+					transapp
+				</a>
+				<nav aria-label="Primary" class="hidden items-center gap-8 sm:flex">
+					{
+						navLinks.map((link) => (
+							<a
+								href={link.href}
+								class="text-xs font-semibold uppercase tracking-widest text-[#0f1b33]/70 transition hover:text-[#0f1b33]"
+							>
+								{link.label}
+							</a>
+						))
+					}
+				</nav>
+				<a
+					href="#waitlist"
+					class="border border-[#0f1b33] bg-[#0f1b33] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#1c2d4d] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:ring-offset-2"
+				>
+					Join the waitlist
+				</a>
+			</div>
+		</header>
+
+		<main id="top">
+			<!-- Hero -->
+			<section class="border-b-4 border-[#0f1b33] px-6 py-16 sm:py-24">
+				<div class="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.3fr_1fr] lg:items-start">
+					<div>
+						<p class="mb-6 inline-flex items-center gap-2 border border-[#0f1b33]/30 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#0f1b33]/70">
+							Certified for accuracy
+						</p>
+						<h1 class="font-['Source_Serif_4',serif] text-4xl font-bold leading-[1.08] tracking-tight text-[#0f1b33] sm:text-5xl md:text-6xl">
+							Every translation should be verified.<br />
+							<span class="text-[#dc2626]">Almost none of them are.</span>
+						</h1>
+						<p class="mt-8 max-w-xl text-lg leading-relaxed text-[#0f1b33]/75">
+							transapp puts three independent AI models on every document, holds your mandated
+							terminology in place without exception, and routes anything contractual or
+							regulated through a human reviewer before it ever reaches your client.
+						</p>
+						<div class="mt-10">
+							<WaitlistForm align="left" />
+							<p class="mt-3 text-xs text-[#0f1b33]/50">
+								Founding-tier pricing for early signups. No spam — launch updates only.
+							</p>
+						</div>
+					</div>
+
+					<div class="border-2 border-[#0f1b33] p-6">
+						<p class="mb-4 border-b border-[#0f1b33]/20 pb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#0f1b33]/60">
+							Verification manifest
+						</p>
+						<dl class="space-y-4">
+							{
+								manifestFacts.map((fact) => (
+									<div class="flex items-baseline justify-between gap-4 border-b border-dashed border-[#0f1b33]/20 pb-3 last:border-0 last:pb-0">
+										<dt class="text-xs uppercase tracking-wide text-[#0f1b33]/60">{fact.label}</dt>
+										<dd class="font-['Source_Serif_4',serif] text-xl font-bold text-[#0f1b33]">{fact.value}</dd>
+									</div>
+								))
+							}
+						</dl>
+					</div>
+				</div>
+			</section>
+
+			<!-- Problem -->
+			<section class="border-b-4 border-[#0f1b33] bg-white px-6 py-16 sm:py-24">
+				<div class="mx-auto max-w-5xl">
+					<p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#dc2626]">Exhibit A — the problem</p>
+					<h2 class="max-w-2xl font-['Source_Serif_4',serif] text-3xl font-bold tracking-tight sm:text-4xl">
+						Speed without verification is exposure
+					</h2>
+					<p class="mt-6 max-w-2xl text-lg leading-relaxed text-[#0f1b33]/75">
+						Businesses ship AI-translated contracts, regulatory filings, and safety instructions
+						daily with no independent check on the model’s work. Most drafts are fine. The
+						liability is that nobody can say, document by document, which ones are not.
+					</p>
+					<div class="mt-14 grid border border-[#0f1b33] sm:grid-cols-3">
+						{
+							problems.map((item, i) => (
+								<div class:list={['p-8', i > 0 ? 'border-t border-[#0f1b33] sm:border-t-0 sm:border-l' : '']}>
+									<p class="font-['Source_Serif_4',serif] text-2xl font-bold text-[#dc2626]">{item.num}</p>
+									<p class="mt-3 font-['Source_Serif_4',serif] text-lg font-bold text-[#0f1b33]">{item.title}</p>
+									<p class="mt-3 text-sm leading-relaxed text-[#0f1b33]/70">{item.body}</p>
+								</div>
+							))
+						}
+					</div>
+				</div>
+			</section>
+
+			<!-- How it works -->
+			<section id="mechanism" class="border-b-4 border-[#0f1b33] bg-[#0f1b33] px-6 py-16 text-white sm:py-24">
+				<div class="mx-auto max-w-5xl">
+					<p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#dc2626]">Exhibit B — the process</p>
+					<h2 class="max-w-2xl font-['Source_Serif_4',serif] text-3xl font-bold tracking-tight sm:text-4xl">
+						Four points of verification before release
+					</h2>
+					<div class="mt-14 grid gap-px overflow-hidden border border-white/20 bg-white/20 sm:grid-cols-2">
+						{
+							mechanism.map((item) => (
+								<div class="bg-[#0f1b33] p-8">
+									<p class="font-['Source_Serif_4',serif] text-sm font-bold text-[#dc2626]">{item.num}</p>
+									<p class="mt-2 font-['Source_Serif_4',serif] text-xl font-bold text-white">{item.title}</p>
+									<p class="mt-3 text-sm leading-relaxed text-white/70">{item.body}</p>
+								</div>
+							))
+						}
+					</div>
+				</div>
+			</section>
+
+			<!-- Founder story -->
+			<section class="border-b-4 border-[#0f1b33] bg-white px-6 py-16 sm:py-24">
+				<div class="mx-auto max-w-3xl">
+					<p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#dc2626]">Exhibit C — provenance</p>
+					<h2 class="font-['Source_Serif_4',serif] text-3xl font-bold tracking-tight sm:text-4xl">
+						Built by the trade AI displaced
+					</h2>
+					<p class="mt-6 text-lg leading-relaxed text-[#0f1b33]/75">
+						transapp’s founder spent his career as a translator before AI translation dismantled
+						his business in the space of a year. Rather than reject the technology, or trust it
+						without question the way most of the market now does, he built the layer his own
+						industry never had: independent, structural verification standing between the model
+						and the client.
+					</p>
+				</div>
+			</section>
+
+			<!-- Testimonials -->
+			<section class="border-b-4 border-[#0f1b33] bg-[#f4f5f7] px-6 py-16 sm:py-24">
+				<div class="mx-auto max-w-5xl">
+					<p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#dc2626]">Exhibit D — early testimony</p>
+					<h2 class="max-w-2xl font-['Source_Serif_4',serif] text-3xl font-bold tracking-tight sm:text-4xl">
+						On the record from early testers
+					</h2>
+					<div class="mt-14 grid gap-6 sm:grid-cols-3">
+						{
+							testimonials.map((t) => (
+								<figure class="flex flex-col justify-between border border-[#0f1b33]/25 bg-white p-6">
+									<blockquote class="text-sm leading-relaxed text-[#0f1b33]/85">“{t.quote}”</blockquote>
+									<figcaption class="mt-6 border-t border-[#0f1b33]/15 pt-4">
+										<p class="text-sm font-semibold text-[#0f1b33]">{t.name}</p>
+										<p class="text-xs uppercase tracking-wide text-[#0f1b33]/50">{t.role}</p>
+									</figcaption>
+								</figure>
+							))
+						}
+					</div>
+				</div>
+			</section>
+
+			<!-- Pricing -->
+			<section id="pricing" class="border-b-4 border-[#0f1b33] bg-white px-6 py-16 sm:py-24">
+				<div class="mx-auto max-w-5xl">
+					<div class="max-w-2xl">
+						<p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#dc2626]">Schedule of fees</p>
+						<h2 class="font-['Source_Serif_4',serif] text-3xl font-bold tracking-tight sm:text-4xl">
+							Terms for organizations that cannot afford to guess
+						</h2>
+					</div>
+					<div class="mt-14 grid border border-[#0f1b33] sm:grid-cols-3">
+						{
+							pricing.map((tier, i) => (
+								<div
+									class:list={[
+										'flex flex-col p-8',
+										i > 0 ? 'border-t border-[#0f1b33] sm:border-t-0 sm:border-l' : '',
+										tier.featured ? 'bg-[#0f1b33] text-white' : 'bg-white text-[#0f1b33]',
+									]}
+								>
+									<p class:list={[
+										'mb-4 inline-flex w-fit items-center gap-1.5 border px-3 py-1 text-[11px] font-bold uppercase tracking-widest',
+										tier.featured ? 'border-[#dc2626] bg-[#dc2626] text-white' : 'border-transparent text-transparent',
+									]}>
+										Most popular
+									</p>
+									<p class="font-['Source_Serif_4',serif] text-xl font-bold">{tier.name}</p>
+									<p class="mt-4 flex items-baseline gap-1">
+										<span class="font-['Source_Serif_4',serif] text-4xl font-bold">{tier.price}</span>
+										<span class={tier.featured ? 'text-white/60' : 'text-[#0f1b33]/55'}>{tier.period}</span>
+									</p>
+									<p class={`mt-3 text-sm leading-relaxed ${tier.featured ? 'text-white/70' : 'text-[#0f1b33]/70'}`}>
+										{tier.description}
+									</p>
+									<ul class="mt-6 flex-1 space-y-3 text-sm">
+										{tier.features.map((f) => (
+											<li class="flex items-start gap-2">
+												<span class:list={['mt-1.5 h-1.5 w-1.5 shrink-0', tier.featured ? 'bg-[#dc2626]' : 'bg-[#0f1b33]']} />
+												<span class={tier.featured ? 'text-white/85' : 'text-[#0f1b33]/75'}>{f}</span>
+											</li>
+										))}
+									</ul>
+									<a
+										href="#waitlist"
+										class:list={[
+											'mt-8 block border px-4 py-3 text-center text-xs font-semibold uppercase tracking-widest transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:ring-offset-2',
+											tier.featured
+												? 'border-[#dc2626] bg-[#dc2626] text-white hover:bg-[#b91c1c] focus-visible:ring-offset-[#0f1b33]'
+												: 'border-[#0f1b33] bg-white text-[#0f1b33] hover:bg-[#0f1b33] hover:text-white focus-visible:ring-offset-white',
+										]}
+									>
+										{tier.name === 'Enterprise' ? 'Contact us' : 'Join the waitlist'}
+									</a>
+								</div>
+							))
+						}
+					</div>
+				</div>
+			</section>
+
+			<!-- Final CTA -->
+			<section id="waitlist" class="bg-[#0f1b33] px-6 py-16 text-white sm:py-24">
+				<div class="mx-auto max-w-2xl text-center">
+					<p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#dc2626]">Filing open</p>
+					<h2 class="font-['Source_Serif_4',serif] text-3xl font-bold tracking-tight sm:text-4xl">
+						Put a verified record behind your next translation
+					</h2>
+					<p class="mt-6 text-lg leading-relaxed text-white/75">
+						If you have ever hesitated before sending an AI-translated document because no one
+						had actually checked it, that hesitation was well founded. Join the waitlist and be
+						first to ship translations with a verified record behind them.
+					</p>
+					<div class="mt-10 flex justify-center">
+						<WaitlistForm align="center" />
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<!-- Footer -->
+		<footer class="border-t-4 border-[#0f1b33] bg-white px-6 py-16">
+			<div class="mx-auto flex max-w-6xl flex-col items-center gap-10 text-[#0f1b33]">
+				<div class="flex items-center gap-2 font-['Source_Serif_4',serif] text-lg font-bold tracking-tight">
+					<span class="inline-block h-4 w-2.5 border border-[#0f1b33] bg-[#dc2626]"></span>
+					transapp
+				</div>
+				<VariationSwitcher />
+				<p class="text-xs uppercase tracking-widest text-[#0f1b33]/50">&copy; {new Date().getFullYear()} transapp. All rights reserved.</p>
+			</div>
+		</footer>
+	</div>
+</Layout>
