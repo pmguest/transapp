@@ -12,7 +12,7 @@
 | Homepage design variations | 5 live: Signal `/` (primary, indexable), Ember `/ember`, Cipher `/cipher`, Anchor `/anchor`, Ledger `/ledger` (noindex) — switcher in every footer | 2026-09-05 |
 | `/variation` skill | `.claude/skills/variation/SKILL.md` — generates a new homepage variation from a style/brand prompt, append-only to the switcher, never touches existing variations | 2026-09-02 |
 | Vercel CLI | Installed globally (`npm i -g vercel`), logged in as `guestpeter7-3331` | 2026-09-05 |
-| Website Vercel project | `pmg13/transapp-website`, linked from `packages/website` (deploys only the website, not the app) | 2026-09-05 |
+| Website Vercel project | `pmg13/transapp-website`, Root Directory setting = `packages/website` (deploys only the website, not the app); linked (`.vercel/`) both at the monorepo root and inside `packages/website` — manual/CLI deploys must run with cwd at the monorepo **root** (`vercel deploy --prod --cwd <repo root>`) so the Root Directory setting resolves correctly; running the CLI from inside `packages/website` itself double-nests the path and fails | 2026-09-05 |
 | Website production URL | https://transapp-website.vercel.app | 2026-09-05 |
 
 ## Log
@@ -306,5 +306,21 @@
   switcher renders in the new Signal-first/Ledger-last order on every
   page
 - Committed and pushed to `origin/website/homepage`
+- Pushing to `website/homepage` only triggered a Preview deployment
+  (Vercel's Production Branch is `main`, not this branch), so the live
+  production URL still served the pre-swap build. Promoted manually with
+  `vercel deploy --prod`, but running it from inside `packages/website`
+  (where the project was originally linked) failed: `Error: The
+  specified Root Directory "packages/website" does not exist` — because
+  the Root Directory setting gets joined onto the CLI's cwd, and cwd was
+  already inside `packages/website`, doubling the path. Fixed by also
+  linking the Vercel project at the monorepo root
+  (`vercel link --yes --project transapp-website --cwd <repo root>`,
+  which added `.vercel`/`.env*` to the root `.gitignore` automatically)
+  and running `vercel deploy --prod --cwd <repo root>` from there
+  instead — this is now the required way to manually deploy
+- Verified the live production URL: `/` serves Signal (no `noindex`
+  meta), `/ledger` serves Ledger (`noindex` present)
+- Committed and pushed the root `.gitignore` update separately
 - STOPPED — outstanding items unchanged: real Buttondown embed snippet,
   user review of improvised testimonials/pricing
