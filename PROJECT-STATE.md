@@ -11,6 +11,9 @@
 | Waitlist provider | Buttondown (embed snippet not yet supplied) | 2026-09-01 |
 | Homepage design variations | 5 live: Ledger `/` (original), Signal `/signal`, Ember `/ember`, Cipher `/cipher`, Anchor `/anchor` — switcher in every footer | 2026-09-03 |
 | `/variation` skill | `.claude/skills/variation/SKILL.md` — generates a new homepage variation from a style/brand prompt, append-only to the switcher, never touches existing variations | 2026-09-02 |
+| Vercel CLI | Installed globally (`npm i -g vercel`), logged in as `guestpeter7-3331` | 2026-09-05 |
+| Website Vercel project | `pmg13/transapp-website`, linked from `packages/website` (deploys only the website, not the app) | 2026-09-05 |
+| Website production URL | https://transapp-website.vercel.app | 2026-09-05 |
 
 ## Log
 
@@ -251,3 +254,26 @@
 - STOPPED — same outstanding items as before: (1) pick a final direction
   (Signal currently leading), (2) real Buttondown embed snippet, (3) user
   review of improvised testimonials/pricing
+
+### 2026-09-05 — Vercel CLI installed, logged in, website deployed
+
+- Installed the Vercel CLI globally (`npm i -g vercel`, v59.11.7) and
+  completed device-flow login as `guestpeter7-3331`
+- Linked only `packages/website` as its own Vercel project
+  (`pmg13/transapp-website`) — run from inside that package directory so
+  the app package is untouched and will get its own separate Vercel
+  project later, as the user specified
+- Vercel CLI auto-detected Astro (build `astro build`, output `dist`) and
+  added `.vercel` + `.env*` to `packages/website/.gitignore`
+  (`.env.local` holds a per-project `VERCEL_OIDC_TOKEN`, not committed)
+- GitHub auto-deploy integration could not be connected (Vercel account
+  has no GitHub login connection yet — user would need to add one at
+  https://vercel.com/docs/accounts/create-an-account#login-methods-and-connections);
+  deployed via `vercel deploy --prod` instead, which does not depend on
+  that connection
+- Verified production deployment: https://transapp-website.vercel.app
+  returns 200 with the expected homepage title
+- STOPPED — deploy is live and will need a manual `vercel deploy --prod`
+  after future changes until GitHub auto-deploy is connected; same
+  outstanding items as before (final design direction, Buttondown embed,
+  testimonials/pricing review)
