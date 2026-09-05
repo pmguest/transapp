@@ -9,7 +9,7 @@
 | Website package location | packages/website | 2026-09-01 |
 | Website dev server | `npm run dev -w website` (default port 4321) | 2026-09-01 |
 | Waitlist provider | Buttondown (embed snippet not yet supplied) | 2026-09-01 |
-| Homepage design variations | 5 live: Ledger `/` (original), Signal `/signal`, Ember `/ember`, Cipher `/cipher`, Anchor `/anchor` — switcher in every footer | 2026-09-03 |
+| Homepage design variations | 5 live: Signal `/` (primary, indexable), Ember `/ember`, Cipher `/cipher`, Anchor `/anchor`, Ledger `/ledger` (noindex) — switcher in every footer | 2026-09-05 |
 | `/variation` skill | `.claude/skills/variation/SKILL.md` — generates a new homepage variation from a style/brand prompt, append-only to the switcher, never touches existing variations | 2026-09-02 |
 | Vercel CLI | Installed globally (`npm i -g vercel`), logged in as `guestpeter7-3331` | 2026-09-05 |
 | Website Vercel project | `pmg13/transapp-website`, linked from `packages/website` (deploys only the website, not the app) | 2026-09-05 |
@@ -277,3 +277,34 @@
   after future changes until GitHub auto-deploy is connected; same
   outstanding items as before (final design direction, Buttondown embed,
   testimonials/pricing review)
+
+### 2026-09-05 — GitHub auto-deploy connected; Signal promoted to `/`
+
+- Connected the Vercel project to GitHub: user added a GitHub Login
+  Connection to their Vercel account, then granted the Vercel GitHub App
+  access to `pmguest/transapp` (it was scoped to "only selected
+  repositories" and didn't include this repo yet)
+- Ran `vercel git connect` (confirmed: "pmguest/transapp is already
+  connected to your project") and explicitly set the project's Root
+  Directory to `packages/website` via `vercel project update` — without
+  this a GitHub-triggered build would run from the monorepo root, which
+  has no build script, and fail. Pushes to the connected branch now
+  trigger an automatic production deploy; manual `vercel deploy --prod`
+  is no longer required
+- User decided: Signal becomes the primary landing page, Ledger goes
+  last. Moved Signal's content into `src/pages/index.astro` (now served
+  at `/`, indexable — dropped its `noindex` and its "— Signal" title
+  override in favor of the site's default title/description) and moved
+  the original Ledger content into a new `src/pages/ledger.astro`
+  (added `noindex={true}` and title "transapp — Ledger", matching the
+  convention the other variation pages already use). Deleted the old
+  `src/pages/signal.astro` (superseded by `index.astro`)
+- Updated `VariationSwitcher.astro`'s array order to: Signal `/`, Ember
+  `/ember`, Cipher `/cipher`, Anchor `/anchor`, Ledger `/ledger`
+- Verified with `astro build` (5/5 pages built) and confirmed in the
+  output HTML: `/` has no `noindex` meta tag, `/ledger` does; the
+  switcher renders in the new Signal-first/Ledger-last order on every
+  page
+- Committed and pushed to `origin/website/homepage`
+- STOPPED — outstanding items unchanged: real Buttondown embed snippet,
+  user review of improvised testimonials/pricing
