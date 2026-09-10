@@ -632,3 +632,77 @@
   earlier entry). No route protection/redirect-if-signed-out exists
   either; `/`, `/signup`, `/signin` are all reachable regardless of auth
   state right now
+
+### 2026-09-10 — Google sign-in added (code); Google Cloud + provider toggle still manual
+
+- Added `src/components/GoogleSignInButton.tsx` (shared by both pages —
+  OAuth has no separate sign-up step) calling
+  `supabase.auth.signInWithOAuth({ provider: 'google', options: {
+  redirectTo: window.location.origin } })`. Wired into `SignInPage.tsx`
+  and `SignUpPage.tsx` below the existing email/password form
+- Checked the live project's auth config via the Management API before
+  touching anything: `external_google_enabled: false` (expected — nobody
+  had set this up yet) and, unexpectedly, `site_url: "http://localhost:3000"`
+  with an **empty** redirect URL allowlist — neither the dev server
+  (`:5173`) nor the deployed app (`transapp-app.vercel.app`) would have
+  been an allowed OAuth redirect target. Fixed via the Management API
+  (URLs only, no secrets involved): `site_url` →
+  `https://transapp-app.vercel.app`, `uri_allow_list` →
+  `http://localhost:5173`, `http://localhost:5173/**`,
+  `https://transapp-app.vercel.app`, `https://transapp-app.vercel.app/**`
+  (bare origins and wildcards both, to avoid any glob-matching ambiguity)
+- Did **not** attempt to enable the Google provider itself or generate/
+  submit OAuth credentials — that needs a Google Cloud OAuth Client
+  ID/Secret, which only the user can create (their own Google account),
+  and the secret should go directly into the Supabase dashboard's own
+  Auth Providers UI rather than through chat/CLI. Gave the user the exact
+  Google Cloud Console steps (OAuth consent screen, Web application OAuth
+  Client ID, authorized redirect URI =
+  `https://huukyfxnwvytklivafck.supabase.co/auth/v1/callback`) and the
+  Supabase dashboard steps (Authentication → Providers → Google → paste
+  Client ID/Secret → Save) to do themselves
+- Verified `npm run build -w app` and `npm run lint -w app` clean
+- STOPPED — code is ready and merged; the feature won't actually work
+  until the user completes the Google Cloud + Supabase dashboard steps
+  above (not something this session can do on their behalf)
+
+### 2026-09-10 — Google sign-in reverted, at user's request
+
+- User asked to fully revert the previous entry's work: remove the
+  Google button and OAuth code from both auth pages, and undo anything
+  else added for it
+- Code: `git revert` of that entry's commit — removed
+  `src/components/GoogleSignInButton.tsx` and its import/usage in
+  `SignInPage.tsx`/`SignUpPage.tsx`. Confirmed no "Google" references
+  remain anywhere in `packages/app/src`
+- Supabase auth URLs: reverted via the Management API back to their
+  pre-entry values — `site_url` back to `http://localhost:3000`,
+  `uri_allow_list` back to empty. Flagging the consequence rather than
+  just doing it silently: this restores the stale/broken default that
+  would block redirect-based auth flows generally (not just Google
+  OAuth) — email confirmation links, password resets, magic links, any
+  future OAuth provider. It's back exactly to how this session found it,
+  which is what "undo anything else added for it" asked for, but it's
+  worth fixing again the next time any redirect-based auth flow is
+  actually needed
+- Checked whether anything external had been set up in the meantime,
+  before touching anything: `external_google_enabled` was still `false`
+  on the live project (exactly as left, never turned on) — told the user
+  rather than assuming. Have no way to check Google Cloud Console
+  directly (no API access there); never touched it this session either
+  way, so nothing on this end suggests a project was created, but only
+  the user can confirm that for certain
+- Verified `npm run build -w app` and `npm run lint -w app` clean;
+  tested live in-browser against the real project: signed up a fresh
+  test account, header updated correctly, signed out, signed back in
+  with the same credentials — both flows work exactly as they did before
+  the Google entry, no Google-related UI on either page
+- This log entry restores the previous one verbatim rather than deleting
+  it, per this file's own rule ("Never rewrite or delete prior log
+  entries") — `git revert` had removed it from `PROJECT-STATE.md` along
+  with the code, which doesn't fit that rule even though the user asked
+  for a full revert; restored it and recorded the revert as a new entry
+  instead. Removed the two Current Facts rows that entry added (Supabase
+  auth URLs, Google sign-in) since Current Facts is current-state, not
+  history, and neither is true anymore
+- STOPPED — back to the state before Google sign-in was attempted
