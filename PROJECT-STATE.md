@@ -599,3 +599,36 @@
   confirmation is now off for new signups on the live project — worth
   remembering this is a real security-relevant setting change, not a
   local-only one
+
+### 2026-09-10 — Email/password auth: sign up, sign in, sign out, header
+
+- Built on the Supabase client plumbing from earlier this session
+  (`src/lib/supabase.ts`) — added `react-router-dom` for `/signup` and
+  `/signin` routes, an `AuthProvider`/`useAuth` context tracking session
+  state via `supabase.auth.getSession()` + `onAuthStateChange()`, a
+  `Header` component (shows "Signed in as `<email>`" + a sign-out button
+  when authed, Sign in/Sign up links otherwise), and `SignUpPage`/
+  `SignInPage` with email/password forms calling `supabase.auth.signUp()`
+  / `signInWithPassword()`
+  — the auth-context/hook split into three files (context, provider,
+  hook) instead of one, since `oxlint`'s Fast Refresh rule flags a file
+  that exports both a component and a non-component
+- Sign-up redirects home immediately (no "check your email" step) —
+  direct consequence of `mailer_autoconfirm: true`, set earlier this
+  session
+- Tested the full flow live against the real project, in-browser: signed
+  up a test account (`testuser-transapp@example.com`) → header updated
+  to show it and a Sign out button → clicked Sign out → redirected to
+  `/signin`, header reverted → signed back in with the same credentials →
+  worked → hard-reloaded the page → still signed in (session persists via
+  Supabase's default localStorage storage) → signed out again to leave a
+  clean state
+- Verified `npm run build -w app` and `npm run lint -w app` clean
+  throughout
+- STOPPED — auth is fully working but there's no database row tied to a
+  user yet (the `documents`/`entity_mappings`/`pipeline_stage_runs` tables
+  from `0001_init.sql` still aren't applied to the live project, and
+  their RLS policies are still deny-all for `authenticated` — see the
+  earlier entry). No route protection/redirect-if-signed-out exists
+  either; `/`, `/signup`, `/signin` are all reachable regardless of auth
+  state right now
