@@ -1,16 +1,14 @@
 # dependencies
 node_modules/
 
-# next.js build output
-.next/
-out/
-
-# production
-build/
+# vite build output
+dist/
+dist-ssr/
 
 # misc
 .DS_Store
 *.pem
+*.local
 
 # logs
 npm-debug.log*
@@ -27,7 +25,10 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# editor
+.vscode/*
+!.vscode/extensions.json
 
 # supabase local dev
 supabase/.branches

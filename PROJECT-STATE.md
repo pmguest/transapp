@@ -15,9 +15,9 @@
 | Website Vercel project | `pmg13/transapp-website`, Root Directory setting = `packages/website` (deploys only the website, not the app); linked (`.vercel/`) both at the monorepo root and inside `packages/website` — manual/CLI deploys must run with cwd at the monorepo **root** (`vercel deploy --prod --cwd <repo root>`) so the Root Directory setting resolves correctly; running the CLI from inside `packages/website` itself double-nests the path and fails | 2026-09-05 |
 | Website production URL | https://transapp-website.vercel.app | 2026-09-05 |
 | Pipeline architecture doc | `PIPELINE-ARCHITECTURE.md` (repo root) — 9-stage spec for `packages/app` | 2026-09-10 |
-| App package framework | Next.js 16.3.4 (App Router, TypeScript, ESLint) | 2026-09-10 |
+| App package framework | React 19 + TypeScript + Vite 8 (replaced Next.js same day — see log) | 2026-09-10 |
 | App package location | packages/app | 2026-09-10 |
-| App dev server | `npm run dev -w app` (default port 3000) | 2026-09-10 |
+| App dev server | `npm run dev -w app` (default port 5173) | 2026-09-10 |
 | App database | Supabase — schema in `packages/app/supabase/migrations/`; no live project linked yet | 2026-09-10 |
 
 ## Log
@@ -405,3 +405,40 @@
   only, no API key needed), (3) a second, separate Vercel project for
   `packages/app` (per PIPELINE-ARCHITECTURE.md — not set up this
   session)
+
+### 2026-09-10 — packages/app: Next.js scaffold replaced with React + TS + Vite
+
+- User asked, same session, to bootstrap a plain React + TypeScript + Vite
+  app in "our web app" — this conflicts with the Next.js + Supabase choice
+  in `PIPELINE-ARCHITECTURE.md`/the entry above. Flagged the conflict via
+  `AskUserQuestion`; user confirmed explicitly: replace the Next.js
+  scaffold in `packages/app` with Vite, keep
+  `supabase/migrations/0001_init.sql` exactly as-is (real schema work),
+  everything else Next.js-specific is disposable
+- Deleted `.next/`, `next.config.ts`, `next-env.d.ts`, the Next.js
+  `package.json`/`tsconfig.json`/`eslint.config.mjs`, and `src/`/`public/`
+  (this also removed last entry's pipeline stage stubs —
+  `src/lib/pipeline/*`, `src/lib/supabase/*` — and the stub API route;
+  recoverable from git history at commit `45b21b4` if needed later, not
+  carried forward)
+- Scaffolded fresh via `npm create vite@latest -- --template react-ts` in a
+  scratch dir, merged into `packages/app` (kept `package.json`'s `name:
+  "app"`; kept `@supabase/supabase-js` as a dependency since the migration
+  is still there); rewrote `src/App.tsx` to just `<h1>Hello world!</h1>`,
+  removed the template's demo assets/CSS/counter
+  (`App.css`, `src/assets/`, `public/icons.svg`)
+- Rewrote `.gitignore` (Vite's `dist/` instead of Next's `.next/`/`out/`)
+  and `README.md` (drops the Next.js file-layout section, notes the
+  migration is kept, points at `.env.example` for when Supabase wiring
+  resumes)
+- Verified: `npm run build -w app` succeeds (`tsc -b && vite build`);
+  started `npm run dev -w app` (port 5173), opened
+  `http://localhost:5173/` in the browser via Claude in Chrome, confirmed
+  page title "transapp — app" and body text "Hello world!" both render
+  (page text extraction + screenshot)
+- STOPPED — bare Vite scaffold only, no pipeline/Supabase wiring in the
+  app code (that was removed this entry). Dev server was left running in
+  the background this session — stop it before the next session if it's
+  no longer needed. Same outstanding items as before on the website side
+  (Buttondown embed, testimonials/pricing review); app-side next step is
+  the user's call on what the React app should actually do
