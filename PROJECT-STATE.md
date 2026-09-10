@@ -14,6 +14,11 @@
 | Vercel CLI | Installed globally (`npm i -g vercel`), logged in as `guestpeter7-3331` | 2026-09-05 |
 | Website Vercel project | `pmg13/transapp-website`, Root Directory setting = `packages/website` (deploys only the website, not the app); linked (`.vercel/`) both at the monorepo root and inside `packages/website` — manual/CLI deploys must run with cwd at the monorepo **root** (`vercel deploy --prod --cwd <repo root>`) so the Root Directory setting resolves correctly; running the CLI from inside `packages/website` itself double-nests the path and fails | 2026-09-05 |
 | Website production URL | https://transapp-website.vercel.app | 2026-09-05 |
+| Pipeline architecture doc | `PIPELINE-ARCHITECTURE.md` (repo root) — 9-stage spec for `packages/app` | 2026-09-10 |
+| App package framework | Next.js 16.3.4 (App Router, TypeScript, ESLint) | 2026-09-10 |
+| App package location | packages/app | 2026-09-10 |
+| App dev server | `npm run dev -w app` (default port 3000) | 2026-09-10 |
+| App database | Supabase — schema in `packages/app/supabase/migrations/`; no live project linked yet | 2026-09-10 |
 
 ## Log
 
@@ -324,3 +329,79 @@
 - Committed and pushed the root `.gitignore` update separately
 - STOPPED — outstanding items unchanged: real Buttondown embed snippet,
   user review of improvised testimonials/pricing
+
+### 2026-09-10 — packages/app scaffolded (Next.js + Supabase, alpha pipeline)
+
+- Read `PIPELINE-ARCHITECTURE.md` (new file at repo root, handed off from
+  another session) — a 9-stage spec for the translation pipeline: 1
+  extraction, 2 anonymisation, 3 translation (Gemini), 4 correction
+  (ChatGPT), 5 QA (Claude), 6 structural completeness check, 7 figures/
+  formatting check, 8 de-anonymisation, 9 mandatory human review. Stages
+  1, 2, 6, 7, 8 are specified as code/mechanical checks, not prompts —
+  stages 3-5 are the only model calls
+- Scaffolded `packages/app` as a real Next.js 16 app (App Router,
+  TypeScript, ESLint; via `create-next-app` in a scratch dir, then merged
+  into the existing `packages/app/package.json` stub — kept its `name:
+  "app"`/`version: "0.0.0"`) — replaced default boilerplate homepage with a
+  one-line placeholder pointing at the pipeline code
+- Added `@supabase/supabase-js` and a server-only service-role client
+  (`src/lib/supabase/server.ts`) — alpha has no auth, so every DB access
+  goes through this client from Next.js server code, never a
+  browser/anon client
+- Added `supabase/migrations/0001_init.sql`: three tables —
+  **documents** (upload metadata, `status`/`current_stage`,
+  `extracted_text`, `final_text`), **entity_mappings** (stage 2's
+  placeholder-to-real-value lookup — the one place real client PII lives
+  after anonymisation; server-only, never sent to Gemini/OpenAI/
+  Anthropic), **pipeline_stage_runs** (audit-trail row per document per
+  stage, so stages 3-7 are independently inspectable rather than trusting
+  a single status column)
+- **RLS confirmed enabled on all three tables** (`alter table ... enable
+  row level security` in the migration). No policies are defined yet —
+  correct for now, not a gap: the alpha has no auth, so nothing but the
+  service-role key (which bypasses RLS) ever touches these tables; an
+  accidental anon/authenticated key is blocked from all access by default
+  until real per-tenant policies are designed for beta
+- No live Supabase project exists yet (checked — no Supabase env vars,
+  no CLI installed), so **TypeScript types were hand-written**
+  (`src/lib/supabase/database.types.ts`) to match the migration, flagged
+  in-file as a stand-in for `supabase gen types typescript` once a real
+  project is linked — regenerate for real at that point, don't keep
+  hand-editing it
+- Built `src/lib/pipeline/`: `types.ts` (shared `PipelineContext`/
+  `EntityMapping` types, the `PIPELINE_STAGES` list), one stub file per
+  stage under `stages/01-...` through `09-human-review.ts` (each
+  documents its stage's spec/rationale from PIPELINE-ARCHITECTURE.md
+  inline and throws "not implemented yet" — real logic is deliberately
+  left for one stage at a time later), and `orchestrator.ts` (sequences
+  stages 1-8, persists progress via Supabase between stages, stops and
+  marks `awaiting_human_review` after stage 8 rather than auto-completing
+  — stage 9 is a human decision, not code)
+- Added a stub API route, `POST /api/pipeline/run` (`{ documentId }` ->
+  calls the orchestrator; currently always 501s since every stage is a
+  stub) — settles the request/response shape before stages are filled in
+- Added `.env.example` (Supabase URL/service-role key, Gemini/OpenAI/
+  Anthropic API keys — all blank placeholders) and `packages/app/.gitignore`
+  (real `.env*` files ignored, `.env.example` explicitly un-ignored so it's
+  trackable)
+- Verified with `npm run build -w app` (compiles, 3 routes generated) and
+  `npm run lint -w app` (0 problems after adding an
+  `argsIgnorePattern: "^_"` ESLint override for the stub stages' currently-
+  unused parameters)
+- **Schema in plain language:** three new database tables track a
+  document's trip through the pipeline. One row per upload
+  (`documents`); a private, server-only table holding the real names/
+  companies/etc that get swapped out before any text goes to an AI
+  vendor (`entity_mappings`); and one row per pipeline stage per
+  document as a running audit log (`pipeline_stage_runs`). Nothing in
+  this migration has run against a real database yet — no Supabase
+  project is linked, so this is schema-as-code only until one exists
+- Did not run the "testing" step of AGENTS.md's protocol — no test suite
+  exists yet in this package
+- STOPPED — scaffold only, nothing in the pipeline actually calls an AI
+  API yet. Next steps are the user's call: (1) create/link a real
+  Supabase project and push this migration, (2) implement stage
+  functions one at a time (extraction is the natural first one — code
+  only, no API key needed), (3) a second, separate Vercel project for
+  `packages/app` (per PIPELINE-ARCHITECTURE.md — not set up this
+  session)
