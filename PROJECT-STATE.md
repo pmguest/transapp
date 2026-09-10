@@ -21,6 +21,8 @@
 | App database | Supabase — schema in `packages/app/supabase/migrations/`; no live project linked yet | 2026-09-10 |
 | App Vercel project | `pmg13/transapp-app`, Root Directory setting = `packages/app`, framework preset `vite` — separate project from `transapp-website`, GitHub-connected; linked (`.vercel/`) inside `packages/app` only (root `.vercel/` stays linked to `transapp-website`, untouched) — manual/CLI deploys of the app run from the monorepo **root** with `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` env vars set to the app project's IDs (`vercel project ls`/`packages/app/.vercel/project.json` has them), e.g. `VERCEL_ORG_ID=<id> VERCEL_PROJECT_ID=<id> vercel deploy --prod --cwd <repo root>` — same root-directory-join quirk as the website, but env vars avoid having to relink root away from the website project each time; Production Branch = `main`, confirmed auto-deploying on push (same as the website) | 2026-09-10 |
 | Git branch for auto-deploy | `main` — both Vercel projects' Production Branch. As of 2026-09-10 `main` is fast-forwarded to match `website/homepage`; push to `main` to trigger production deploys of both website and app going forward | 2026-09-10 |
+| Supabase project | ref `huukyfxnwvytklivafck`; URL/publishable key and a personal access token (`SUPABASE_ACCESS_TOKEN`) live in `packages/app/.env` (gitignored) — no values recorded here per this file's own rule | 2026-09-10 |
+| Supabase auth setting | `mailer_autoconfirm: true` — email confirmation is **off** for new signups on the live project (changed via Management API this session) | 2026-09-10 |
 | App production URL | https://transapp-app.vercel.app | 2026-09-10 |
 
 ## Log
@@ -554,3 +556,46 @@
   to going forward for both projects to auto-deploy; `website/homepage`
   now equals `main` as of the merge and will need re-syncing (merge or
   rebase) if used again after this entry's commit
+
+### 2026-09-10 — Supabase: bootstrap plumbing, RLS policy rule, email confirmation disabled
+
+- Installed `@supabase/supabase-js` for real (was already in
+  `package.json` from the deleted Next.js scaffold but never actually
+  installed) and added `packages/app/src/lib/supabase.ts` — a single
+  client instance reading `VITE_SUPABASE_PROJECT_URL` /
+  `VITE_SUPABASE_PUBLISHABLE_KEY`. Not wired into any UI, no auth code —
+  plumbing only, per the user's explicit scope ("I'll add authentication
+  separately")
+- User's real project URL and publishable key are in `packages/app/.env`
+  (gitignored, not committed) — connection-verified against the live
+  project directly (queried a nonexistent table, got a real API error
+  back rather than a connection/auth failure)
+- New standing rule (added to `AGENTS.md`'s Database changes section):
+  every table creation must turn on RLS and write its policies in the
+  same step, never deferred. Applied it immediately to
+  `supabase/migrations/0001_init.sql` — confirmed none of its three
+  tables exist on the live project yet, but the migration itself had
+  exactly the gap the rule targets (RLS enabled, zero explicit policies);
+  each table now gets an explicit deny-all policy for
+  `anon`/`authenticated` right after its own RLS-enable statement
+- User also added a Supabase personal access token (account-level
+  Management API credential) — its value lives at
+  `packages/app/.env` (`SUPABASE_ACCESS_TOKEN`), gitignored, not
+  recorded here per this file's own rule against writing API tokens
+- Used that token (Management API `PATCH .../config/auth`) to set
+  `mailer_autoconfirm: true` on the live project, disabling email
+  confirmation for new signups — read the setting before changing it
+  (`mailer_autoconfirm: false`, i.e. confirmation was required),
+  applied the change, then re-read it fresh (not just the PATCH
+  response echo) to confirm it stuck
+- Also noticed and flagged (not fixed, per the harness's "don't revert
+  without saying so" guidance): `AGENTS.md` was edited directly on disk
+  outside this session mid-task, ending up saved as UTF-16LE (git sees
+  it as a binary diff) with a duplicate line at the end repeating the
+  RLS/policy rule already added to the Database changes section.
+  Committed as found; user hasn't yet said whether to clean it up
+- STOPPED — Supabase plumbing exists and is live-verified; no tables
+  exist on the live project yet (migration not applied); email
+  confirmation is now off for new signups on the live project — worth
+  remembering this is a real security-relevant setting change, not a
+  local-only one
