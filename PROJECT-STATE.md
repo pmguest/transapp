@@ -23,6 +23,7 @@
 | Git branch for auto-deploy | `main` — both Vercel projects' Production Branch. As of 2026-09-10 `main` is fast-forwarded to match `website/homepage`; push to `main` to trigger production deploys of both website and app going forward | 2026-09-10 |
 | Supabase project | ref `huukyfxnwvytklivafck`; URL/publishable key and a personal access token (`SUPABASE_ACCESS_TOKEN`) live in `packages/app/.env` (gitignored) — no values recorded here per this file's own rule | 2026-09-10 |
 | Supabase auth setting | `mailer_autoconfirm: true` — email confirmation is **off** for new signups on the live project (changed via Management API this session) | 2026-09-10 |
+| Supabase auth URLs | `site_url` = `https://transapp-app.vercel.app`; `uri_allow_list` includes `http://localhost:5173` and `https://transapp-app.vercel.app` (both bare and `/**`) — fixes redirect-based auth flows (email confirmation links, password resets, any future OAuth) generally, not tied to any one feature | 2026-09-10 |
 | App production URL | https://transapp-app.vercel.app | 2026-09-10 |
 
 ## Log
@@ -706,3 +707,20 @@
   auth URLs, Google sign-in) since Current Facts is current-state, not
   history, and neither is true anymore
 - STOPPED — back to the state before Google sign-in was attempted
+
+### 2026-09-10 — Supabase redirect URL config fixed (not feature-specific this time)
+
+- Re-applied the `site_url`/`uri_allow_list` fix from the reverted Google
+  sign-in entry, but as its own standalone fix rather than tied to any
+  feature: `site_url` → `https://transapp-app.vercel.app`,
+  `uri_allow_list` → `http://localhost:5173`, `http://localhost:5173/**`,
+  `https://transapp-app.vercel.app`, `https://transapp-app.vercel.app/**`
+  (bare + wildcard both). Was still the stale `http://localhost:3000`/
+  empty default from before this project had a real deployment
+- Confirmed with a fresh GET afterward (not just the PATCH response
+  echo): both values persisted; `external_google_enabled` and
+  `mailer_autoconfirm` unaffected by this scoped change
+- This unblocks any redirect-based auth flow whenever it's turned on —
+  email confirmation links, password resets, magic links, future OAuth
+  providers — not just the Google sign-in that was reverted
+- STOPPED — config-only change, no code touched
