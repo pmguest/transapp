@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { GoogleSignInButton } from '../components/GoogleSignInButton'
 
 export function SignUpPage() {
   const [email, setEmail] = useState('')
@@ -58,6 +59,10 @@ export function SignUpPage() {
           {submitting ? 'Signing up…' : 'Sign up'}
         </button>
       </form>
+
+      <p style={{ textAlign: 'center', margin: '1rem 0' }}>or</p>
+      <GoogleSignInButton />
+
       <p>
         Already have an account? <Link to="/signin">Sign in</Link>
       </p>
