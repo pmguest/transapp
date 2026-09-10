@@ -23,8 +23,6 @@
 | Git branch for auto-deploy | `main` — both Vercel projects' Production Branch. As of 2026-09-10 `main` is fast-forwarded to match `website/homepage`; push to `main` to trigger production deploys of both website and app going forward | 2026-09-10 |
 | Supabase project | ref `huukyfxnwvytklivafck`; URL/publishable key and a personal access token (`SUPABASE_ACCESS_TOKEN`) live in `packages/app/.env` (gitignored) — no values recorded here per this file's own rule | 2026-09-10 |
 | Supabase auth setting | `mailer_autoconfirm: true` — email confirmation is **off** for new signups on the live project (changed via Management API this session) | 2026-09-10 |
-| Supabase auth URLs | `site_url` = `https://transapp-app.vercel.app`; `uri_allow_list` also includes `http://localhost:5173` (both bare and `/**`) — was `localhost:3000`/empty before this session, would have blocked OAuth redirects entirely | 2026-09-10 |
-| Google sign-in | Code merged (`GoogleSignInButton`, both auth pages) but **not functional yet** — Google provider is disabled on the live project until the user completes the Google Cloud + Supabase dashboard steps (see log) | 2026-09-10 |
 | App production URL | https://transapp-app.vercel.app | 2026-09-10 |
 
 ## Log
@@ -634,36 +632,3 @@
   earlier entry). No route protection/redirect-if-signed-out exists
   either; `/`, `/signup`, `/signin` are all reachable regardless of auth
   state right now
-
-### 2026-09-10 — Google sign-in added (code); Google Cloud + provider toggle still manual
-
-- Added `src/components/GoogleSignInButton.tsx` (shared by both pages —
-  OAuth has no separate sign-up step) calling
-  `supabase.auth.signInWithOAuth({ provider: 'google', options: {
-  redirectTo: window.location.origin } })`. Wired into `SignInPage.tsx`
-  and `SignUpPage.tsx` below the existing email/password form
-- Checked the live project's auth config via the Management API before
-  touching anything: `external_google_enabled: false` (expected — nobody
-  had set this up yet) and, unexpectedly, `site_url: "http://localhost:3000"`
-  with an **empty** redirect URL allowlist — neither the dev server
-  (`:5173`) nor the deployed app (`transapp-app.vercel.app`) would have
-  been an allowed OAuth redirect target. Fixed via the Management API
-  (URLs only, no secrets involved): `site_url` →
-  `https://transapp-app.vercel.app`, `uri_allow_list` →
-  `http://localhost:5173`, `http://localhost:5173/**`,
-  `https://transapp-app.vercel.app`, `https://transapp-app.vercel.app/**`
-  (bare origins and wildcards both, to avoid any glob-matching ambiguity)
-- Did **not** attempt to enable the Google provider itself or generate/
-  submit OAuth credentials — that needs a Google Cloud OAuth Client
-  ID/Secret, which only the user can create (their own Google account),
-  and the secret should go directly into the Supabase dashboard's own
-  Auth Providers UI rather than through chat/CLI. Gave the user the exact
-  Google Cloud Console steps (OAuth consent screen, Web application OAuth
-  Client ID, authorized redirect URI =
-  `https://huukyfxnwvytklivafck.supabase.co/auth/v1/callback`) and the
-  Supabase dashboard steps (Authentication → Providers → Google → paste
-  Client ID/Secret → Save) to do themselves
-- Verified `npm run build -w app` and `npm run lint -w app` clean
-- STOPPED — code is ready and merged; the feature won't actually work
-  until the user completes the Google Cloud + Supabase dashboard steps
-  above (not something this session can do on their behalf)
