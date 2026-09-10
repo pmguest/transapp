@@ -1,10 +1,12 @@
 -- transapp pipeline — alpha schema (see PIPELINE-ARCHITECTURE.md at repo root)
--- Single tenant, no auth/billing. All access in the alpha goes through Next.js
--- API routes using the Supabase service-role key (RLS is enabled on every
--- table below as a safety backstop, but no policies are defined — the
--- service role bypasses RLS by design, and no anon/authenticated key exists
--- for the public to hit these tables directly. Real per-tenant policies are
--- a beta-scope item once auth exists.)
+-- Single tenant, no auth/billing yet. Every table below turns on RLS and
+-- gets an explicit policy in the same statement block that creates it —
+-- never a table left policy-less "for now". Until auth exists, that policy
+-- is a deliberate deny-all for anon/authenticated: the app's publishable
+-- key must never be able to read or write these tables, only server-side
+-- code holding the service-role key can (service_role bypasses RLS by
+-- design). Real per-user policies replace the deny-all once auth exists —
+-- that's a beta-scope item, not this migration.
 
 -- One row per uploaded document, tracking its progress through pipeline
 -- stages 1-9.
@@ -45,6 +47,14 @@ create table documents (
 comment on table documents is
   'One row per uploaded source document, tracking status through pipeline stages 1-9.';
 
+alter table documents enable row level security;
+
+create policy "deny all — service role only" on documents
+  for all
+  to anon, authenticated
+  using (false)
+  with check (false);
+
 -- Stage 2 anonymisation mapping table. This is the one place real personal/
 -- company/identifying data from a client document lives after stage 2 runs.
 -- It is populated and read only by server-side code — it must never be sent
@@ -64,6 +74,14 @@ create table entity_mappings (
 
 comment on table entity_mappings is
   'Real-value lookup for anonymisation placeholders. Sensitive: server-only, never sent to any AI vendor.';
+
+alter table entity_mappings enable row level security;
+
+create policy "deny all — service role only" on entity_mappings
+  for all
+  to anon, authenticated
+  using (false)
+  with check (false);
 
 -- Audit trail: one row per (document, stage) run, so every mechanical check
 -- (stages 6-7) and every model call (stages 3-5) is independently inspectable
@@ -90,6 +108,10 @@ comment on table pipeline_stage_runs is
 
 create index pipeline_stage_runs_document_id_idx on pipeline_stage_runs (document_id);
 
-alter table documents enable row level security;
-alter table entity_mappings enable row level security;
 alter table pipeline_stage_runs enable row level security;
+
+create policy "deny all — service role only" on pipeline_stage_runs
+  for all
+  to anon, authenticated
+  using (false)
+  with check (false);
