@@ -485,3 +485,38 @@
   connection all live in Vercel, not the repo
 - STOPPED — app is live but still just the "Hello world!" scaffold; same
   outstanding items as before
+
+### 2026-09-10 — Website: testimonial quotes and pricing figures replaced with placeholders
+
+- Scope: all 5 `packages/website/src/pages/*.astro` files (`index.astro`
+  — live Signal homepage, `ledger.astro`, `ember.astro`, `cipher.astro`,
+  `anchor.astro`). Checked shared components (`Nav.astro`, `Footer.astro`,
+  `VariationSwitcher.astro`, `WaitlistForm.astro`, `Layout.astro`) too —
+  none hold testimonial/pricing content directly (each page defines its
+  own `testimonials`/`pricing` arrays; the only "pricing" text in the
+  shared components is the `#pricing` nav/footer anchor link label,
+  untouched)
+- In each of the 5 page files: replaced all 3 `testimonials[].quote`
+  strings with the same Lorem ipsum filler sentence, and both numeric
+  `pricing[].price` values (Starter `$39`, Business `$149`) with
+  `$0000`. Left `name`/`role` attributions (e.g. "Operations lead,
+  Logistics company") and the Enterprise tier's `price: 'Let's talk'`
+  untouched — the former aren't quotes or figures, the latter isn't a
+  number
+- Nothing else in any of the 5 files was touched — confirmed via `git
+  diff --stat`: exactly 10 changed lines per file (5 edits × add+delete),
+  matching the 3 quotes + 2 prices in each
+- Verified with `npm run build -w website` — 5/5 pages built; spot-checked
+  `dist/` output for all 5 routes: 3 "Lorem ipsum" occurrences and 2
+  "$0000" occurrences per page, no leftover "$39"/"$149" anywhere
+- Flagged for user review (not changed, since neither is a quote or a
+  number, per the request's scope): the Enterprise tier's `price:
+  'Let's talk'` on all 5 pages, and every testimonial's `name`/`role`
+  fields (generic role + industry descriptors, no real named individuals
+  or companies, but still fabricated) — say if those should also become
+  placeholders
+- STOPPED — this was the "user review of improvised testimonials/
+  pricing" outstanding item from earlier entries, now addressed by
+  placeholdering rather than a content rewrite; real testimonial quotes
+  and pricing figures still need to be supplied before this ships
+  publicly
