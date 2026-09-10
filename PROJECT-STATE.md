@@ -19,7 +19,8 @@
 | App package location | packages/app | 2026-09-10 |
 | App dev server | `npm run dev -w app` (default port 5173) | 2026-09-10 |
 | App database | Supabase — schema in `packages/app/supabase/migrations/`; no live project linked yet | 2026-09-10 |
-| App Vercel project | `pmg13/transapp-app`, Root Directory setting = `packages/app`, framework preset `vite` — separate project from `transapp-website`, GitHub-connected; linked (`.vercel/`) inside `packages/app` only (root `.vercel/` stays linked to `transapp-website`, untouched) — manual/CLI deploys of the app run from the monorepo **root** with `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` env vars set to the app project's IDs (`vercel project ls`/`packages/app/.vercel/project.json` has them), e.g. `VERCEL_ORG_ID=<id> VERCEL_PROJECT_ID=<id> vercel deploy --prod --cwd <repo root>` — same root-directory-join quirk as the website, but env vars avoid having to relink root away from the website project each time | 2026-09-10 |
+| App Vercel project | `pmg13/transapp-app`, Root Directory setting = `packages/app`, framework preset `vite` — separate project from `transapp-website`, GitHub-connected; linked (`.vercel/`) inside `packages/app` only (root `.vercel/` stays linked to `transapp-website`, untouched) — manual/CLI deploys of the app run from the monorepo **root** with `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` env vars set to the app project's IDs (`vercel project ls`/`packages/app/.vercel/project.json` has them), e.g. `VERCEL_ORG_ID=<id> VERCEL_PROJECT_ID=<id> vercel deploy --prod --cwd <repo root>` — same root-directory-join quirk as the website, but env vars avoid having to relink root away from the website project each time; Production Branch = `main`, confirmed auto-deploying on push (same as the website) | 2026-09-10 |
+| Git branch for auto-deploy | `main` — both Vercel projects' Production Branch. As of 2026-09-10 `main` is fast-forwarded to match `website/homepage`; push to `main` to trigger production deploys of both website and app going forward | 2026-09-10 |
 | App production URL | https://transapp-app.vercel.app | 2026-09-10 |
 
 ## Log
@@ -520,3 +521,36 @@
   placeholdering rather than a content rewrite; real testimonial quotes
   and pricing figures still need to be supplied before this ships
   publicly
+
+### 2026-09-10 — main brought up to date; app's GitHub auto-deploy confirmed on main
+
+- `main` had been sitting at the original initial commit this whole time
+  (1 commit) while every session's work — website redesigns, the app
+  scaffold, both Vercel projects — only ever lived on `website/homepage`
+  (10 commits ahead). Both Vercel projects' Production Branch is `main`
+  (confirmed for `transapp-website` in the 2026-09-05 entry; `transapp-app`
+  turned out to default to `main` too once GitHub-connected — see below),
+  so nothing had ever auto-deployed to production via git push; every
+  production deploy so far was a manual `vercel deploy --prod`
+- Asked the user how to reconcile this; they chose to fast-forward `main`
+  to `website/homepage`'s tip (`git merge --ff-only`) rather than cherry-
+  pick just the app, or leave it alone. Pushed to `origin/main` — this
+  also brings the website's git-triggered production deploys in sync
+  with what manual deploys had already made live, no new content exposed
+- Confirmed `transapp-app`'s GitHub connection (set up 2026-09-10, see
+  the "deployed to Vercel as its own project" entry above) fires a
+  **Production** deployment on a push to `main` with no manual CLI step —
+  `vercel ls transapp-app` showed a new Production deployment ready ~20s
+  after the `git push origin main`, matching the website's existing
+  pattern. Root Directory (`packages/app`) and framework preset (`vite`)
+  from that same earlier entry still apply
+- Made a small visible change to confirm the pipeline end-to-end: added
+  a second line to `packages/app/src/App.tsx` ("Deployed automatically
+  via GitHub → Vercel.") under the "Hello world!" heading. Verified
+  `npm run build -w app` locally first, then committed directly on
+  `main` (per this task's purpose — testing the main-triggered deploy)
+  and pushed
+- STOPPED — once this push lands, `main` is the branch to work from/push
+  to going forward for both projects to auto-deploy; `website/homepage`
+  now equals `main` as of the merge and will need re-syncing (merge or
+  rebase) if used again after this entry's commit
