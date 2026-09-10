@@ -19,6 +19,8 @@
 | App package location | packages/app | 2026-09-10 |
 | App dev server | `npm run dev -w app` (default port 5173) | 2026-09-10 |
 | App database | Supabase — schema in `packages/app/supabase/migrations/`; no live project linked yet | 2026-09-10 |
+| App Vercel project | `pmg13/transapp-app`, Root Directory setting = `packages/app`, framework preset `vite` — separate project from `transapp-website`, GitHub-connected; linked (`.vercel/`) inside `packages/app` only (root `.vercel/` stays linked to `transapp-website`, untouched) — manual/CLI deploys of the app run from the monorepo **root** with `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` env vars set to the app project's IDs (`vercel project ls`/`packages/app/.vercel/project.json` has them), e.g. `VERCEL_ORG_ID=<id> VERCEL_PROJECT_ID=<id> vercel deploy --prod --cwd <repo root>` — same root-directory-join quirk as the website, but env vars avoid having to relink root away from the website project each time | 2026-09-10 |
+| App production URL | https://transapp-app.vercel.app | 2026-09-10 |
 
 ## Log
 
@@ -442,3 +444,44 @@
   no longer needed. Same outstanding items as before on the website side
   (Buttondown embed, testimonials/pricing review); app-side next step is
   the user's call on what the React app should actually do
+
+### 2026-09-10 — packages/app deployed to Vercel as its own project
+
+- Created a new Vercel project, `transapp-app` (`vercel project add`),
+  separate from `transapp-website` — same pattern as the website's own
+  setup, per Vercel's monorepo guidance (one project per deployed
+  directory, https://vercel.com/docs/monorepos)
+- Set its Root Directory to `packages/app` and framework preset to `vite`
+  (`vercel project update transapp-app --root-directory packages/app
+  --framework vite --yes`)
+- Linked `packages/app` locally to it (`vercel link --yes --project
+  transapp-app`, run with cwd inside `packages/app`) — this created
+  `packages/app/.vercel/` (gitignored) and a `.env.local` holding a
+  per-project `VERCEL_OIDC_TOKEN` (also gitignored). The CLI also
+  appended a redundant `.vercel`/`.env*` block to the end of
+  `packages/app/.gitignore` — removed it, since it duplicated existing
+  rules earlier in the file and, worse, its `.env*` re-ignored
+  `.env.example` by appearing after (and so overriding) the `!.env.example`
+  exception already in the file
+- Connected the same GitHub repo (`pmguest/transapp`) to the new project
+  (`vercel git connect --yes`, run from `packages/app`) — pushes now
+  trigger deploys for both `transapp-website` and `transapp-app`
+  independently, each building only its own Root Directory
+- Deployed to production without touching the monorepo root's existing
+  `.vercel/` link (which stays pointed at `transapp-website`): ran
+  `vercel deploy --prod --cwd <repo root>` with `VERCEL_ORG_ID`/
+  `VERCEL_PROJECT_ID` env vars set to `transapp-app`'s IDs instead of
+  relinking root — same root-directory-join requirement discovered for
+  the website (CLI joins Root Directory onto cwd, so cwd must be the repo
+  root), but env vars avoid needing to swap which project root is linked
+  to each time
+- Verified: build succeeded on Vercel (`npm run build` → `tsc -b && vite
+  build`), deployment aliased to https://transapp-app.vercel.app,
+  confirmed 200 response and `<title>transapp — app</title>` in the
+  served HTML; confirmed the root `.vercel/project.json` still points at
+  `transapp-website`, unchanged
+- No local file changes were needed beyond the `.gitignore` cleanup above
+  — project creation, root-directory/framework settings, and the GitHub
+  connection all live in Vercel, not the repo
+- STOPPED — app is live but still just the "Hello world!" scaffold; same
+  outstanding items as before
