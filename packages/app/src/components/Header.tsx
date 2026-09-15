@@ -1,10 +1,39 @@
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/use-auth'
+import type { Database } from '../lib/database.types'
+
+type Profile = Database['public']['Tables']['profiles']['Row']
 
 export function Header() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
+  const [profile, setProfile] = useState<Profile | null>(null)
+
+  const loadProfile = useCallback(async () => {
+    if (!user) return
+
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (data) {
+        setProfile(data)
+      }
+    } catch (err) {
+      console.error('Failed to load profile:', err)
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (user) {
+      loadProfile()
+    }
+  }, [user, loadProfile])
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -19,7 +48,10 @@ export function Header() {
 
       {loading ? null : user ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span>Signed in as {user.email}</span>
+          <span>Signed in as {profile?.display_name || user.email}</span>
+          <Link to="/profile" style={{ color: '#0066cc', textDecoration: 'none' }}>
+            Profile
+          </Link>
           <button onClick={handleSignOut}>Sign out</button>
         </div>
       ) : (
