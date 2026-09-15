@@ -765,6 +765,9 @@
   profile row. Users can visit `/profile` to view/edit their display name,
   bio, and avatar URL. Profile data is public-readable; updates are
   restricted to each user's own profile
-- STOPPED — profiles feature is fully live; Vercel will auto-deploy the
-  TypeScript-types update to both `transapp-website` and `transapp-app`
-  on the next push to `main`
+- **Supabase CLI linked:** `supabase link --project-ref huukyfxnwvytklivafck`
+  — allows future migrations to be pushed with `supabase db push`
+- Committed and pushed; Vercel will auto-deploy the TypeScript-types
+  update to both `transapp-website` and `transapp-app` on the next push
+  to `main`
+- STOPPED — profiles feature is fully live and deployed
