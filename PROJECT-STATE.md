@@ -771,3 +771,25 @@
   update to both `transapp-website` and `transapp-app` on the next push
   to `main`
 - STOPPED — profiles feature is fully live and deployed
+
+### 2026-09-15 — Profiles trigger fixed; signup now creates profiles
+
+- **Issue discovered:** New user signups were failing with "Database error
+  saving new user". The profile auto-creation trigger was silently failing.
+- **Root cause:** The trigger function had no `set search_path = public`,
+  causing Postgres to fail to resolve table references when executing inside
+  the trigger context. The `on conflict do nothing` clause hid the error.
+- **Fix applied:** Created two new migrations:
+  - `0003_profiles_insert_policy.sql`: Added INSERT RLS policy (debug step)
+  - `0004_profiles_insert_permissive.sql`: Made INSERT policy more permissive
+  - `0005_profiles_disable_rls_debug.sql`: Disabled RLS to isolate issue
+  - `0006_disable_profile_trigger_debug.sql`: Disabled trigger (confirmed it
+    was the culprit — signup worked without it)
+  - `0007_fix_profile_trigger.sql`: Rewrote trigger with explicit `set
+    search_path = public`, proper error handling, and cleaner logic
+  - `0008_reenable_profiles_rls.sql`: Re-enabled RLS on profiles table
+- **Verified:** Signup now works end-to-end. New user (dave@example.com) was
+  created, profile was auto-created with display_name="dave" (from email
+  prefix), and profile data loads and displays in /profile page correctly.
+  All RLS policies enforced as expected.
+- STOPPED — signup and profiles fully working
