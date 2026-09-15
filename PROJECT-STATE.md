@@ -25,6 +25,7 @@
 | Supabase auth setting | `mailer_autoconfirm: true` — email confirmation is **off** for new signups on the live project (changed via Management API this session) | 2026-09-10 |
 | Supabase auth URLs | `site_url` = `https://transapp-app.vercel.app`; `uri_allow_list` includes `http://localhost:5173` and `https://transapp-app.vercel.app` (both bare and `/**`) — fixes redirect-based auth flows (email confirmation links, password resets, any future OAuth) generally, not tied to any one feature | 2026-09-10 |
 | App production URL | https://transapp-app.vercel.app | 2026-09-10 |
+| Profiles table | `supabase/migrations/0002_profiles.sql`: user_id (FK to auth.users), display_name, bio, avatar_url; RLS enabled (public-read, users edit own only); auto-creates on signup via trigger | 2026-09-15 |
 
 ## Log
 
@@ -724,3 +725,35 @@
   email confirmation links, password resets, magic links, future OAuth
   providers — not just the Google sign-in that was reverted
 - STOPPED — config-only change, no code touched
+
+### 2026-09-15 — Profiles table: schema, RLS, auto-signup, and edit UI
+
+- Created `supabase/migrations/0002_profiles.sql`:
+  - **Table:** `profiles` with `id`, `user_id` (FK to `auth.users`),
+    `display_name`, `bio`, `avatar_url`, `created_at`, `updated_at`
+  - **RLS:** enabled; anyone can read (public profiles), authenticated
+    users can only update/delete their own (auth.uid() = user_id checks)
+  - **Triggers:** auto-create a profile row when a user signs up
+    (with `display_name` set to the email prefix, e.g. `testuser` from
+    `testuser@example.com`); auto-update the `updated_at` timestamp on
+    profile edits
+- **TypeScript types:** hand-wrote `src/lib/database.types.ts` (covers
+  all tables: `documents`, `entity_mappings`, `pipeline_stage_runs`,
+  `profiles`) — regenerate with `supabase gen types typescript` once the
+  live project is synced with the schema
+- **UI components:**
+  - `ProfilePage.tsx` (`/profile` route): authenticated users can view
+    their profile (email, display name, bio, avatar) or click "Edit
+    Profile" to inline-edit all three fields; avatar renders as a 120px
+    circular image if URL is set; upserts the profile row on save
+  - Updated `Header.tsx` to show user's `display_name` if set (otherwise
+    email); added a "Profile" link next to Sign out button
+  - Updated `App.tsx` routing to include `GET /profile`
+- **Verified:** `npm run build` and `npm run lint` pass (linter warns
+  about setState in async effects, expected and acceptable for data
+  fetching patterns). Profile table RLS is enabled ✓
+- **Migration not yet applied to live project** — needs `supabase db push`
+  once this session confirms the user is ready to apply it
+- STOPPED — profiles table is complete; next step is the user's call on
+  whether to apply the migration to the live project (or iterate on the
+  schema first)
