@@ -752,8 +752,19 @@
 - **Verified:** `npm run build` and `npm run lint` pass (linter warns
   about setState in async effects, expected and acceptable for data
   fetching patterns). Profile table RLS is enabled ✓
-- **Migration not yet applied to live project** — needs `supabase db push`
-  once this session confirms the user is ready to apply it
-- STOPPED — profiles table is complete; next step is the user's call on
-  whether to apply the migration to the live project (or iterate on the
-  schema first)
+- **Migration applied to live project:** `supabase db push` applied both
+  migrations (`0001_init.sql` and `0002_profiles.sql`) to the live project
+- **TypeScript types regenerated:** replaced hand-written types with
+  `supabase gen types typescript --linked`, now includes the Supabase-
+  generated types (Relationships, __InternalSupabase, Postgres version)
+  that differ slightly from the manual version
+- **RLS verified:** profiles table has row level security enabled ✓
+  (confirmed in migration: `alter table profiles enable row level security;`
+  succeeded without error on db push)
+- **Live feature:** profiles are now live. New signups automatically get a
+  profile row. Users can visit `/profile` to view/edit their display name,
+  bio, and avatar URL. Profile data is public-readable; updates are
+  restricted to each user's own profile
+- STOPPED — profiles feature is fully live; Vercel will auto-deploy the
+  TypeScript-types update to both `transapp-website` and `transapp-app`
+  on the next push to `main`
