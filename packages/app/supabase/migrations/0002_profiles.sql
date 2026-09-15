@@ -23,6 +23,12 @@ create policy "profiles are public" on profiles
   to anon, authenticated
   using (true);
 
+-- System (trigger) can insert profiles; users can insert their own
+create policy "allow profile insert" on profiles
+  for insert
+  to authenticated, service_role
+  with check (true);
+
 -- Users can only update their own profile
 create policy "users can update own profile" on profiles
   for update
