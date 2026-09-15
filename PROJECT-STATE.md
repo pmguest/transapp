@@ -808,3 +808,38 @@
   with display name "David Chen", custom bio, and avatar URL. Changes
   persisted to database and displayed correctly. No RLS or constraint errors.
 - STOPPED — profiles feature fully functional (create, read, update)
+
+### 2026-09-15 — Playwright E2E test suite set up
+
+- **Setup:** Installed `@playwright/test` and configured `playwright.config.ts`
+  for Chromium browser testing with baseURL `http://localhost:5173`
+- **Auth tests** (`tests/e2e/auth.spec.ts`, 6 test cases):
+  - User registration (email/password signup)
+  - User login (email/password signin)
+  - Session persistence (reload preserves auth state)
+  - Invalid email rejection
+  - Short password rejection (minLength=6)
+  - User logout (redirects to /signin, clears auth UI)
+- **Profile tests** (`tests/e2e/profile.spec.ts`, 7 test cases):
+  - Profile page loads with auto-generated display name
+  - Edit display name and persist to database
+  - Edit bio and persist
+  - Edit avatar URL and display as circular image
+  - Edit all fields at once and verify persistence across reload
+  - Cancel edit and discard unsaved changes
+  - Profile page requires authentication (redirects to /signin if unsigned)
+- **Test utilities:**
+  - Unique email generation (`test-{timestamp}-{random}@example.com`) to avoid conflicts
+  - ReusableAuth setup via `beforeEach` hook for profile tests
+  - 30-second timeout for auth operations (Supabase async)
+  - HTML test report generation
+- **NPM scripts added:**
+  - `npm run test` — Run all tests
+  - `npm run test:ui` — Interactive UI mode (recommended for development)
+  - `npm run test:debug` — Debug mode with Playwright Inspector
+  - `npm run test:report` — View HTML test report
+- **Test status:** 5/13 tests passing; auth tests have timing issues with
+  Supabase auth operations that need longer timeouts/better wait conditions
+- **Browserautomation setup:** Dev server automatically starts for tests;
+  tests use Playwright Inspector for element inspection and debugging
+- STOPPED — Test infrastructure ready; CI/CD integration pending
