@@ -793,3 +793,18 @@
   prefix), and profile data loads and displays in /profile page correctly.
   All RLS policies enforced as expected.
 - STOPPED — signup and profiles fully working
+
+### 2026-09-15 — Profile UPDATE fixed (duplicate key error resolved)
+
+- **Issue:** Profile updates were failing with error 23505 (duplicate key
+  violation on `profiles_user_id_key`). Users couldn't save profile edits.
+- **Root cause:** ProfilePage.tsx was using `.upsert()` with `user_id`
+  included in the payload. When Supabase tried to UPDATE the row, it
+  attempted to set `user_id` again, violating the UNIQUE constraint.
+- **Fix:** Changed from `.upsert()` to `.update()` and removed `user_id`
+  from the payload. Profiles are created by trigger on signup, so they
+  always exist and only need updates.
+- **Verified:** Profile edits now work end-to-end. Updated user profile
+  with display name "David Chen", custom bio, and avatar URL. Changes
+  persisted to database and displayed correctly. No RLS or constraint errors.
+- STOPPED — profiles feature fully functional (create, read, update)
