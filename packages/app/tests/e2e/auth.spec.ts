@@ -127,7 +127,7 @@ test.describe('Authentication', () => {
     // Should not see Profile link anymore
     await expect(page.locator('a:has-text("Profile")')).not.toBeVisible()
 
-    // Should see Sign up/Sign in links
-    await expect(page.locator('a:has-text("Sign up")')).toBeVisible()
+    // Should see Sign up/Sign in links (in header nav, not footer)
+    await expect(page.locator('nav a:has-text("Sign up")')).toBeVisible()
   })
 })

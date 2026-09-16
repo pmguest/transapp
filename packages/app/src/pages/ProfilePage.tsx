@@ -69,7 +69,8 @@ export function ProfilePage() {
     setError(null)
 
     try {
-      const { error: err } = await supabase
+      console.log('[ProfilePage] Saving profile for user:', user.id)
+      const { data, error: err } = await supabase
         .from('profiles')
         .update({
           display_name: formData.display_name || null,
@@ -79,12 +80,14 @@ export function ProfilePage() {
         })
         .eq('user_id', user.id)
 
+      console.log('[ProfilePage] Update response:', { data, error: err })
       if (err) throw err
 
+      console.log('[ProfilePage] Update succeeded, reloading profile')
       await loadProfile()
       setIsEditing(false)
     } catch (err) {
-      console.error('Failed to save profile:', err)
+      console.error('[ProfilePage] Failed to save profile:', err)
       setError('Failed to save profile')
     } finally {
       setIsSaving(false)
