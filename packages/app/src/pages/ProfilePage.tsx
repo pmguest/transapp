@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/use-auth'
+import { useProfile } from '../lib/ProfileContext'
 import type { Database } from '../lib/database.types'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -9,6 +10,7 @@ type Profile = Database['public']['Tables']['profiles']['Row']
 export function ProfilePage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
+  const { profile: contextProfile, setProfile: setContextProfile } = useProfile()
 
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isEditing, setIsEditing] = useState(false)
@@ -38,6 +40,7 @@ export function ProfilePage() {
 
       if (data) {
         setProfile(data)
+        setContextProfile(data)
         setFormData({
           display_name: data.display_name || '',
           bio: data.bio || '',
@@ -48,7 +51,7 @@ export function ProfilePage() {
       console.error('Failed to load profile:', err)
       setError('Failed to load profile')
     }
-  }, [user])
+  }, [user, setContextProfile])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -69,8 +72,7 @@ export function ProfilePage() {
     setError(null)
 
     try {
-      console.log('[ProfilePage] Saving profile for user:', user.id)
-      const { data, error: err } = await supabase
+      const { error: err } = await supabase
         .from('profiles')
         .update({
           display_name: formData.display_name || null,
@@ -80,14 +82,12 @@ export function ProfilePage() {
         })
         .eq('user_id', user.id)
 
-      console.log('[ProfilePage] Update response:', { data, error: err })
       if (err) throw err
 
-      console.log('[ProfilePage] Update succeeded, reloading profile')
       await loadProfile()
       setIsEditing(false)
     } catch (err) {
-      console.error('[ProfilePage] Failed to save profile:', err)
+      console.error('Failed to save profile:', err)
       setError('Failed to save profile')
     } finally {
       setIsSaving(false)

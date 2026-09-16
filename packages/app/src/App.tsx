@@ -3,6 +3,7 @@ import { Header } from './components/Header'
 import { SignUpPage } from './pages/SignUpPage'
 import { SignInPage } from './pages/SignInPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { ProfileProvider } from './lib/ProfileContext'
 
 function HomePage() {
   return (
@@ -15,7 +16,7 @@ function HomePage() {
 
 function App() {
   return (
-    <>
+    <ProfileProvider>
       <Header />
       <main style={{ padding: '1rem' }}>
         <Routes>
@@ -25,7 +26,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
-    </>
+    </ProfileProvider>
   )
 }
 

@@ -1,15 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/use-auth'
-import type { Database } from '../lib/database.types'
-
-type Profile = Database['public']['Tables']['profiles']['Row']
+import { useProfile } from '../lib/ProfileContext'
 
 export function Header() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const { profile, setProfile } = useProfile()
 
   const loadProfile = useCallback(async () => {
     if (!user) return
@@ -27,7 +25,7 @@ export function Header() {
     } catch (err) {
       console.error('Failed to load profile:', err)
     }
-  }, [user])
+  }, [user, setProfile])
 
   useEffect(() => {
     if (user) {

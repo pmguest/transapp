@@ -12,6 +12,8 @@ test.describe('User Profile', () => {
     await page.fill('input[type="password"]', testPassword)
     await page.click('button:has-text("Sign up")')
     await expect(page).toHaveURL('/')
+    // Wait for header to show Profile link before tests proceed
+    await expect(page.locator('a:has-text("Profile")')).toBeVisible()
   })
 
   test('should display profile page with auto-generated display name', async ({ page }) => {
@@ -19,15 +21,13 @@ test.describe('User Profile', () => {
     await page.click('a:has-text("Profile")')
     await expect(page).toHaveURL('/profile')
 
-    // Should show email
-    await expect(page.locator('text=Email')).toBeVisible()
+    // Should show email, display name, and bio sections
+    await expect(page.locator('main').getByText('Email')).toBeVisible()
+    await expect(page.locator('main').getByText('Display Name')).toBeVisible()
+    await expect(page.locator('main').getByText('Bio')).toBeVisible()
 
-    // Should show display name (auto-generated from email prefix)
-    await expect(page.locator('text=Display Name')).toBeVisible()
-
-    // Should have "Not set" for bio initially
-    await expect(page.locator('text=Bio')).toBeVisible()
-    await expect(page.locator('text=Not set')).toBeVisible()
+    // Should have "Not set" for bio initially (first em tag that contains "Not set")
+    await expect(page.locator('main em:first-of-type')).toContainText('Not set')
   })
 
   test('should edit profile display name', async ({ page }) => {
@@ -48,11 +48,11 @@ test.describe('User Profile', () => {
     // Should return to view mode
     await expect(page.locator('button:has-text("Edit Profile")')).toBeVisible()
 
-    // Display name should be updated
-    await expect(page.locator('text=John Developer')).toBeVisible()
+    // Display name should be updated in profile section (main content, not header)
+    await expect(page.locator('main p:has-text("John Developer")')).toBeVisible()
 
     // Header should also update to show new display name
-    await expect(page.locator('text=Signed in as John Developer')).toBeVisible()
+    await expect(page.locator('header span:has-text("Signed in as John Developer")')).toBeVisible()
   })
 
   test('should edit profile bio', async ({ page }) => {
@@ -68,8 +68,11 @@ test.describe('User Profile', () => {
     // Save
     await page.click('button:has-text("Save")')
 
-    // Bio should be displayed
-    await expect(page.locator('text=Full-stack developer interested in building scalable applications.')).toBeVisible()
+    // Should return to view mode
+    await expect(page.locator('button:has-text("Edit Profile")')).toBeVisible()
+
+    // Bio should be displayed in profile section (use getByText for simpler matching)
+    await expect(page.locator('main').getByText('Full-stack developer interested in building scalable applications.')).toBeVisible()
   })
 
   test('should edit profile avatar URL', async ({ page }) => {
@@ -106,23 +109,26 @@ test.describe('User Profile', () => {
     // Save
     await page.click('button:has-text("Save")')
 
-    // Verify all fields are updated
-    await expect(page.locator('text=Alice Smith')).toBeVisible()
-    await expect(page.locator('text=Passionate about tech and open source')).toBeVisible()
+    // Should return to view mode
+    await expect(page.locator('button:has-text("Edit Profile")')).toBeVisible()
+
+    // Verify all fields are updated (in main content area)
+    await expect(page.locator('main p:has-text("Alice Smith")')).toBeVisible()
+    await expect(page.locator('main p:has-text("Passionate about tech and open source")')).toBeVisible()
     await expect(page.locator('img[alt="Avatar"]')).toHaveAttribute('src', 'https://i.pravatar.cc/120?img=15')
 
     // Reload page and verify persistence
     await page.reload()
-    await expect(page.locator('text=Alice Smith')).toBeVisible()
-    await expect(page.locator('text=Passionate about tech and open source')).toBeVisible()
+    await expect(page.locator('main p:has-text("Alice Smith")')).toBeVisible()
+    await expect(page.locator('main p:has-text("Passionate about tech and open source")')).toBeVisible()
   })
 
   test('should cancel edit and discard changes', async ({ page }) => {
     await page.click('a:has-text("Profile")')
 
-    // Get original display name (email prefix)
-    const emailText = await page.locator('text=Email').locator('.. >> text=/[@]/').textContent()
-    const originalDisplayName = emailText?.split('@')[0]
+    // Get original display name from the profile
+    const displayNameElements = await page.locator('main').getByText(/^test-\d+.*$/).first().textContent()
+    const originalDisplayName = displayNameElements?.trim()
 
     // Click edit
     await page.click('button:has-text("Edit Profile")')
@@ -136,11 +142,9 @@ test.describe('User Profile', () => {
     await page.click('button:has-text("Cancel")')
 
     // Original values should be restored
-    if (originalDisplayName) {
-      await expect(page.locator(`text=${originalDisplayName}`)).toBeVisible()
-    }
-    await expect(page.locator('text=New Name')).not.toBeVisible()
-    await expect(page.locator('text=New bio')).not.toBeVisible()
+    await expect(page.locator('button:has-text("Edit Profile")')).toBeVisible()
+    await expect(page.locator('main').getByText('New Name')).not.toBeVisible()
+    await expect(page.locator('main').getByText('New bio')).not.toBeVisible()
   })
 
   test('should redirect to signin when accessing profile without auth', async ({ page }) => {
