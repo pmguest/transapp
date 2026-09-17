@@ -10,7 +10,7 @@ type Profile = Database['public']['Tables']['profiles']['Row']
 export function ProfilePage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
-  const { profile: contextProfile, setProfile: setContextProfile } = useProfile()
+  const { setProfile: setContextProfile } = useProfile()
 
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isEditing, setIsEditing] = useState(false)

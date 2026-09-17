@@ -1,4 +1,3 @@
-import { useCallback, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/use-auth'
@@ -7,31 +6,7 @@ import { useProfile } from '../lib/ProfileContext'
 export function Header() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
-  const { profile, setProfile } = useProfile()
-
-  const loadProfile = useCallback(async () => {
-    if (!user) return
-
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-
-      if (data) {
-        setProfile(data)
-      }
-    } catch (err) {
-      console.error('Failed to load profile:', err)
-    }
-  }, [user, setProfile])
-
-  useEffect(() => {
-    if (user) {
-      loadProfile()
-    }
-  }, [user, loadProfile])
+  const { profile } = useProfile()
 
   async function handleSignOut() {
     await supabase.auth.signOut()
