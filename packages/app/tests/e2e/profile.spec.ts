@@ -1,16 +1,32 @@
 import { test, expect } from '@playwright/test'
 
-const generateTestEmail = () => `test-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`
 const testPassword = 'TestPassword123!'
+// Use a stable email for this test suite to avoid rate limiting from repeated signups
+const sharedTestEmail = 'profile-test-suite@example.com'
 
 test.describe('User Profile', () => {
-  test.beforeEach(async ({ page }) => {
-    // Sign up before each test
-    const testEmail = generateTestEmail()
-    await page.goto('/signup')
-    await page.fill('input[type="email"]', testEmail)
+  test.beforeAll(async ({ browser }) => {
+    // Create shared test account once before all tests run
+    const context = await browser.newContext()
+    const page = await context.newPage()
+    await page.goto('http://localhost:5173/signup')
+
+    // Try to sign up; it might fail if account already exists, which is fine
+    await page.fill('input[type="email"]', sharedTestEmail)
     await page.fill('input[type="password"]', testPassword)
     await page.click('button:has-text("Sign up")')
+
+    // Wait a moment for signup to complete (either success or duplicate account error)
+    await page.waitForTimeout(1000)
+    await context.close()
+  })
+
+  test.beforeEach(async ({ page }) => {
+    // Sign in with the shared test account before each test
+    await page.goto('/signin')
+    await page.fill('input[type="email"]', sharedTestEmail)
+    await page.fill('input[type="password"]', testPassword)
+    await page.click('button:has-text("Sign in")')
     await expect(page).toHaveURL('/')
     // Wait for header to show Profile link before tests proceed
     await expect(page.locator('a:has-text("Profile")')).toBeVisible()
@@ -26,8 +42,8 @@ test.describe('User Profile', () => {
     await expect(page.locator('main').getByText('Display Name')).toBeVisible()
     await expect(page.locator('main').getByText('Bio')).toBeVisible()
 
-    // Should have "Not set" for bio initially (first em tag that contains "Not set")
-    await expect(page.locator('main em:first-of-type')).toContainText('Not set')
+    // Should have "Not set" for bio initially (target the Bio field specifically)
+    await expect(page.locator('main label:text-is("Bio") + p')).toContainText('Not set')
   })
 
   test('should edit profile display name', async ({ page }) => {
@@ -126,10 +142,6 @@ test.describe('User Profile', () => {
   test('should cancel edit and discard changes', async ({ page }) => {
     await page.click('a:has-text("Profile")')
 
-    // Get original display name from the profile
-    const displayNameElements = await page.locator('main').getByText(/^test-\d+.*$/).first().textContent()
-    const originalDisplayName = displayNameElements?.trim()
-
     // Click edit
     await page.click('button:has-text("Edit Profile")')
 
@@ -141,10 +153,15 @@ test.describe('User Profile', () => {
     // Cancel
     await page.click('button:has-text("Cancel")')
 
-    // Original values should be restored
+    // Back in view mode, with neither edit rendered
     await expect(page.locator('button:has-text("Edit Profile")')).toBeVisible()
     await expect(page.locator('main').getByText('New Name')).not.toBeVisible()
     await expect(page.locator('main').getByText('New bio')).not.toBeVisible()
+
+    // Re-opening the editor must not resurrect the discarded draft
+    await page.click('button:has-text("Edit Profile")')
+    await expect(page.locator('input[placeholder="Enter your display name"]')).not.toHaveValue('New Name')
+    await expect(page.locator('textarea[placeholder="Tell us about yourself"]')).not.toHaveValue('New bio')
   })
 
   test('should redirect to signin when accessing profile without auth', async ({ page }) => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/use-auth'
@@ -10,18 +10,32 @@ type Profile = Database['public']['Tables']['profiles']['Row']
 export function ProfilePage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
-  const { profile: contextProfile, setProfile: setContextProfile } = useProfile()
+  const { setProfile: setContextProfile } = useProfile()
 
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Mirrors isEditing, but readable from loadProfile without making it a
+  // dependency (which would re-run the fetch every time edit mode toggles).
+  const isEditingRef = useRef(false)
+
   const [formData, setFormData] = useState({
     display_name: '',
     bio: '',
     avatar_url: '',
   })
+
+  function beginEdit() {
+    isEditingRef.current = true
+    setIsEditing(true)
+  }
+
+  function endEdit() {
+    isEditingRef.current = false
+    setIsEditing(false)
+  }
 
   const loadProfile = useCallback(async () => {
     if (!user) return
@@ -41,11 +55,16 @@ export function ProfilePage() {
       if (data) {
         setProfile(data)
         setContextProfile(data)
-        setFormData({
-          display_name: data.display_name || '',
-          bio: data.bio || '',
-          avatar_url: data.avatar_url || '',
-        })
+
+        // Only seed the form from the server while the user is not editing.
+        // A fetch that resolves mid-edit must not overwrite unsaved input.
+        if (!isEditingRef.current) {
+          setFormData({
+            display_name: data.display_name || '',
+            bio: data.bio || '',
+            avatar_url: data.avatar_url || '',
+          })
+        }
       }
     } catch (err) {
       console.error('Failed to load profile:', err)
@@ -85,7 +104,7 @@ export function ProfilePage() {
       if (err) throw err
 
       await loadProfile()
-      setIsEditing(false)
+      endEdit()
     } catch (err) {
       console.error('Failed to save profile:', err)
       setError('Failed to save profile')
@@ -177,7 +196,7 @@ export function ProfilePage() {
             </div>
 
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={beginEdit}
               style={{
                 padding: '0.75rem 1.5rem',
                 backgroundColor: '#0066cc',
@@ -279,14 +298,12 @@ export function ProfilePage() {
               <button
                 type="button"
                 onClick={() => {
-                  setIsEditing(false)
-                  if (profile) {
-                    setFormData({
-                      display_name: profile.display_name || '',
-                      bio: profile.bio || '',
-                      avatar_url: profile.avatar_url || '',
-                    })
-                  }
+                  endEdit()
+                  setFormData({
+                    display_name: profile?.display_name || '',
+                    bio: profile?.bio || '',
+                    avatar_url: profile?.avatar_url || '',
+                  })
                 }}
                 style={{
                   padding: '0.75rem 1.5rem',
