@@ -5,6 +5,10 @@ const testPassword = 'TestPassword123!'
 const sharedTestEmail = 'profile-test-suite@example.com'
 
 test.describe('User Profile', () => {
+  // All tests share one Supabase account and mutate the same profile row —
+  // must run one at a time, not in parallel, or edits race and clobber each other.
+  test.describe.configure({ mode: 'serial' })
+
   test.beforeAll(async ({ browser }) => {
     // Create shared test account once before all tests run
     const context = await browser.newContext()
