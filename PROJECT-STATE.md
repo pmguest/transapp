@@ -26,6 +26,8 @@
 | Supabase auth URLs | `site_url` = `https://transapp-app.vercel.app`; `uri_allow_list` includes `http://localhost:5173` and `https://transapp-app.vercel.app` (both bare and `/**`) — fixes redirect-based auth flows (email confirmation links, password resets, any future OAuth) generally, not tied to any one feature | 2026-09-10 |
 | App production URL | https://transapp-app.vercel.app | 2026-09-10 |
 | Profiles table | `supabase/migrations/0002_profiles.sql`: user_id (FK to auth.users), display_name, bio, avatar_url; RLS enabled (public-read, users edit own only); auto-creates on signup via trigger | 2026-09-15 |
+| Playwright pass rate | 13/13 passing locally (`npm run test -w app`), verified 2026-09-24 | 2026-09-24 |
+| GitHub Actions CI | `.github/workflows/test.yml` — runs the Playwright suite on every push, needs repo secrets `VITE_SUPABASE_PROJECT_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` to reach Supabase; whether those secrets are actually set in GitHub, and whether any run has gone green, is **unverified** — `gh` isn't authenticated in this environment (`gh auth status` fails, no `GH_TOKEN`/`GITHUB_TOKEN` set), so check the Actions tab directly | 2026-09-23 |
 
 ## Log
 
@@ -843,3 +845,107 @@
 - **Browserautomation setup:** Dev server automatically starts for tests;
   tests use Playwright Inspector for element inspection and debugging
 - STOPPED — Test infrastructure ready; CI/CD integration pending
+
+### 2026-09-21 — Profile/header state ownership fixed; Cancel discard bug fixed
+
+- Commit `5b276a3`. Two bugs, one root cause: the profile row was being
+  fetched independently in two places (`Header.tsx` had its own
+  `loadProfile`/`useEffect`, separate from `ProfileContext`), so they could
+  disagree, and `ProfilePage.tsx`'s Cancel handler only restored the old
+  form values from its own `profile` state, which raced with an
+  in-flight fetch
+- `src/lib/ProfileContext.tsx`: `ProfileProvider` is now the single owner of
+  profile fetching, keyed to the signed-in user (`useEffect` on `user`,
+  with a `cancelled` flag to ignore a stale fetch if the user changes/logs
+  out mid-request)
+- `src/components/Header.tsx`: removed its own `loadProfile`/`useEffect`/
+  `useCallback` entirely; now reads `profile` from `ProfileContext` only
+- `src/pages/ProfilePage.tsx`: added `isEditingRef` (a ref mirroring
+  `isEditing`, readable from `loadProfile` without making it trigger a
+  re-fetch) — `loadProfile` now only overwrites `formData` from the server
+  when `!isEditingRef.current`, so a fetch that resolves mid-edit can't
+  clobber unsaved input. Cancel now always resets `formData` from
+  `profile` (with `?.` fallbacks) instead of only doing so when a stale
+  local `profile` was truthy
+- `tests/e2e/profile.spec.ts`: fixed a locator that matched more than one
+  element (`main em:first-of-type` → `main label:text-is("Bio") + p`);
+  rewrote the Cancel/discard test to also reopen the editor after
+  cancelling and assert the discarded draft doesn't reappear (the actual
+  bug this commit fixes)
+- Also switched this file's `beforeEach` from signing up a fresh
+  `generateTestEmail()` account per test to a `beforeAll`-created shared
+  account (`profile-test-suite@example.com`) that every test signs into —
+  aimed at avoiding signup rate-limiting from repeated per-test accounts;
+  this is the change that produces the write-race flakiness fixed two
+  commits later
+- `AGENTS.md`: added the "Proposing edits" section (plain +/- diffs before
+  applying, check for existing declarations before adding new ones) —
+  file was re-saved as UTF-8 in this commit (was UTF-16LE per the
+  2026-09-10 entry's flag; git now shows a normal diff instead of a binary
+  one)
+- STOPPED — no test run recorded in the commit itself; CI/CD integration
+  (flagged as pending in the prior entry) still hadn't started
+
+### 2026-09-23 — `/testcheck` skill added
+
+- Commit `3b5f0c6`. Added `.claude/skills/testcheck/SKILL.md` (47 lines) —
+  a reusable skill, triggered by "test health", "check my tests", or
+  `/testcheck`, that runs `packages/app`'s Playwright suite (the only test
+  suite in the repo) and fixes failures
+- Skill's procedure: run the full suite and record the exact pass/fail
+  count; if anything fails, re-run just the failing test(s) in isolation
+  before treating them as real (this suite hits a live Supabase project,
+  so cross-run data collisions can look like regressions) — a failure that
+  doesn't reproduce alone is logged as flaky, not fixed; for reproducible
+  failures, read the assertion plus recent `git log -p` on the relevant
+  file to decide app-bug vs. test-bug; app bugs get fixed and re-verified
+  (single test, then full suite); a suspected test bug is never edited
+  directly — the skill stops and waits for the user's go-ahead; repeat
+  until green, then report the final count and what was fixed
+- STOPPED — skill added, not yet exercised end-to-end in this log
+
+### 2026-09-23 — GitHub Actions workflow added to run the suite on every push
+
+- Commit `c71087e`. Added `.github/workflows/test.yml` (36 lines): triggers
+  on every `push`, runs on `ubuntu-latest`, checks out the repo, sets up
+  Node 22 with npm caching, `npm ci`, installs Playwright's Chromium
+  browser (`--with-deps`), runs `npm run test -w app`, and uploads the
+  Playwright HTML report as a build artifact (`if: always()`, 14-day
+  retention) so a failure's report is inspectable without re-running
+  locally
+- The job's `env` wires `VITE_SUPABASE_PROJECT_URL` and
+  `VITE_SUPABASE_PUBLISHABLE_KEY` from `${{ secrets.* }}` — the suite runs
+  against the real Supabase project (same as local), so these two repo
+  secrets have to exist in GitHub for the job to do anything other than
+  fail at the auth step. This session could not confirm whether they've
+  been added (`gh` is unauthenticated here — see Current Facts) — added
+  as a Current Facts row rather than assumed either way
+- STOPPED — workflow file is in the repo and will fire on the next push,
+  but whether it actually goes green depends on those two secrets being
+  set in the GitHub repo's Settings → Secrets, which is outside what this
+  session could check or do
+
+### 2026-09-23 — Flaky profile tests fixed: forced to run serially
+
+- Commit `6a4b9da`. `tests/e2e/profile.spec.ts` (+4 lines): added
+  `test.describe.configure({ mode: 'serial' })` to the `User Profile`
+  suite
+- Root cause: the 2026-09-21 entry above switched this suite from a fresh
+  signed-up account per test to one shared account
+  (`profile-test-suite@example.com`) reused across all 7 profile tests.
+  Playwright's default is to run tests in a file in parallel across
+  workers; with a shared account, parallel tests were all reading/writing
+  the same `profiles` row at once, so one test's edit could be
+  overwritten mid-flight by another's, producing intermittent failures
+  that didn't reproduce when a single test was re-run in isolation
+  (exactly the flaky-vs-real distinction `testcheck`, added earlier this
+  same day, exists to catch)
+- Forcing `mode: 'serial'` makes the 7 profile tests run one at a time
+  instead of across parallel workers, eliminating the write race without
+  reverting to per-test account creation (which risked the signup
+  rate-limiting the shared-account approach was adopted to avoid)
+- Verified this session (not part of the commit): re-ran the full suite
+  locally (`npm run test -w app`) — **13/13 passing**, up from the 5/13
+  recorded on 2026-09-15
+- STOPPED — suite is green locally; CI status is still unverified (see
+  the GitHub Actions entry above and the Current Facts table)
