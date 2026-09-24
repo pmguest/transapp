@@ -27,7 +27,7 @@
 | App production URL | https://transapp-app.vercel.app | 2026-09-10 |
 | Profiles table | `supabase/migrations/0002_profiles.sql`: user_id (FK to auth.users), display_name, bio, avatar_url; RLS enabled (public-read, users edit own only); auto-creates on signup via trigger | 2026-09-15 |
 | Playwright pass rate | 13/13 passing locally (`npm run test -w app`), verified 2026-09-24 | 2026-09-24 |
-| GitHub Actions CI | `.github/workflows/test.yml` — runs the Playwright suite on every push, needs repo secrets `VITE_SUPABASE_PROJECT_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` to reach Supabase; whether those secrets are actually set in GitHub, and whether any run has gone green, is **unverified** — `gh` isn't authenticated in this environment (`gh auth status` fails, no `GH_TOKEN`/`GITHUB_TOKEN` set), so check the Actions tab directly | 2026-09-23 |
+| GitHub Actions CI | `.github/workflows/test.yml` — runs the Playwright suite on every push. Repo secrets `VITE_SUPABASE_PROJECT_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` are set in GitHub; the run triggered by commit `673ce87` went green (user-confirmed — this session's `gh` is still unauthenticated, so it couldn't check the Actions tab directly itself) | 2026-09-24 |
 
 ## Log
 
@@ -949,3 +949,16 @@
   recorded on 2026-09-15
 - STOPPED — suite is green locally; CI status is still unverified (see
   the GitHub Actions entry above and the Current Facts table)
+
+### 2026-09-24 — GitHub Actions CI confirmed green
+
+- Supabase secrets (`VITE_SUPABASE_PROJECT_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY`)
+  were added to the GitHub repo since the previous entry. Pushed an empty
+  commit (`673ce87`, "Trigger CI run now that secrets are set") to fire
+  the `Test suite` workflow on demand
+- User confirmed in-browser that the triggered run went green — this
+  session's `gh` is still unauthenticated (no `GH_TOKEN`), so it couldn't
+  check the Actions tab itself and is recording the user's confirmation
+  rather than its own verification
+- STOPPED — CI is now a working safety net on every push; no further
+  outstanding items from the test-infrastructure line of work
